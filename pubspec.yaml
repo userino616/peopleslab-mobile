@@ -1,0 +1,40 @@
+name: peopleslab
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  flutter_riverpod: ^2.5.1
+  peopleslab_api:
+    git:
+      url: git@github.com:userino616/peopleslab-api.git
+      ref: main
+      path: gen/dart
+  flutter_secure_storage: ^9.2.2
+  uuid: ^4.4.2
+  logger: ^2.4.0
+
+  # ВАЖЛИВО: тимчасово тримаємо 4.1.x, бо grpc >=4.2.0 вимагає meta ^1.17.0,
+  # а flutter_test у твоєму SDK пінить meta на 1.16.0.
+  grpc: ">=4.1.0 <4.2.0"
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+dependency_overrides:
+  # Єдина лінійка runtime protobuf по всьому графу
+  protobuf: ^4.2.0
+  # Фіксуємо grpc 4.1.0 навіть якщо транзитивно щось просить 4.2.0
+  grpc: 4.1.0
+
+flutter:
+  uses-material-design: true
