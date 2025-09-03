@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
+import 'package:grpc/grpc_connection_interface.dart' show ClientChannelBase;
 import 'package:peopleslab/core/auth/token_storage.dart';
 
 class AuthInterceptor extends ClientInterceptor {
   static const _kSkipKey = 'x-skip-auth-interceptor';
 
-  final ClientChannel channel;
+  final ClientChannelBase channel;
   final TokenStorage storage;
 
   AuthInterceptor({required this.channel, required this.storage});

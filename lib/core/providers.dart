@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:grpc/grpc.dart';
+import 'package:grpc/grpc_connection_interface.dart' show ClientChannelBase;
 import 'package:peopleslab/core/auth/token_storage.dart';
 import 'package:peopleslab/core/grpc/auth_interceptor.dart';
 import 'package:peopleslab/core/grpc/grpc_channel.dart';
@@ -8,7 +8,7 @@ import 'package:peopleslab/features/auth/data/grpc_auth_repository.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
 
 // gRPC channel provider
-final grpcChannelProvider = Provider<ClientChannel>((ref) => GrpcClientFactory.createChannel());
+final grpcChannelProvider = Provider<ClientChannelBase>((ref) => GrpcClientFactory.createChannel());
 
 final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 

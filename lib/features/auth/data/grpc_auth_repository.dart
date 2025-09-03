@@ -1,4 +1,5 @@
 import 'package:grpc/grpc.dart';
+import 'package:grpc/grpc_connection_interface.dart' show ClientChannelBase;
 import 'package:peopleslab_api/auth/v1/service.pbgrpc.dart' as authpb;
 import 'package:peopleslab/core/auth/token_storage.dart';
 import 'package:peopleslab/core/grpc/auth_interceptor.dart';
@@ -6,7 +7,7 @@ import 'package:peopleslab/features/auth/domain/auth_repository.dart';
 
 /// Placeholder implementation. Replace with real gRPC stubs after proto generation.
 class GrpcAuthRepository implements AuthRepository {
-  final ClientChannel channel;
+  final ClientChannelBase channel;
   final TokenStorage storage;
   late final authpb.AuthServiceClient _client;
 
@@ -14,6 +15,7 @@ class GrpcAuthRepository implements AuthRepository {
     _client = authpb.AuthServiceClient(channel, interceptors: [interceptor]);
   }
 
+  // todo enrich with propel user device data and probably move to conts
   Future<authpb.Device> _device() async => authpb.Device(
         deviceId: await storage.deviceId(),
         platform: 'flutter',
