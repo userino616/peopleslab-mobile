@@ -73,7 +73,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 12),
                   TextButton(
-                    onPressed: () => Navigator.of(context).pushNamed(AppRoutes.register),
+                    onPressed: () => Navigator.of(context).pushReplacementNamed(AppRoutes.register),
                     child: const Text("Don't have an account? Sign Up"),
                   ),
                 ],
@@ -85,4 +85,3 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
-

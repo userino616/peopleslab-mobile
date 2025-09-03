@@ -86,7 +86,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ),
                   const SizedBox(height: 12),
                   TextButton(
-                    onPressed: () => Navigator.of(context).pushNamed(AppRoutes.login),
+                    onPressed: () => Navigator.of(context).pushReplacementNamed(AppRoutes.login),
                     child: const Text('Already have an account? Sign In'),
                   ),
                 ],
@@ -98,4 +98,3 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     );
   }
 }
-
