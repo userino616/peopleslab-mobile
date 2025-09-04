@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:peopleslab/core/router/app_router.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -19,7 +20,7 @@ class HomePage extends ConsumerWidget {
               onPressed: () async {
                 await ref.read(authControllerProvider.notifier).signOut();
                 if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);
+                  Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.signIn, (r) => false);
                 }
               },
               child: const Text('Sign out'),

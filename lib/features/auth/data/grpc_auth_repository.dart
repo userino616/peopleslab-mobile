@@ -54,4 +54,52 @@ class GrpcAuthRepository implements AuthRepository {
     );
     await storage.clearTokens();
   }
+
+  @override
+  Future<AuthUser> signInWithGoogle({required String idToken}) async {
+    final resp = await _client.socialSignIn(
+      authpb.SocialSignInRequest(
+        provider: authpb.Provider.PROVIDER_GOOGLE,
+        idToken: idToken,
+        device: await _device(),
+      ),
+      options: CallOptions(timeout: const Duration(seconds: 10), metadata: {_skipAuth: 'true'}),
+    );
+    await storage.writeTokens(accessToken: resp.accessToken, refreshToken: resp.refreshToken);
+    final user = resp.user;
+    return AuthUser(id: user.id, email: user.email);
+  }
+
+  @override
+  Future<AuthUser> signInWithApple({required String idToken}) async {
+    final resp = await _client.socialSignIn(
+      authpb.SocialSignInRequest(
+        provider: authpb.Provider.PROVIDER_APPLE,
+        idToken: idToken,
+        device: await _device(),
+      ),
+      options: CallOptions(timeout: const Duration(seconds: 10), metadata: {_skipAuth: 'true'}),
+    );
+    await storage.writeTokens(accessToken: resp.accessToken, refreshToken: resp.refreshToken);
+    final user = resp.user;
+    return AuthUser(id: user.id, email: user.email);
+  }
+
+  static const _skipAuth = 'x-skip-auth-interceptor';
+
+  @override
+  Future<void> forgotPassword({required String email}) async {
+    await _client.forgotPassword(
+      authpb.ForgotPasswordRequest(email: email),
+      options: CallOptions(timeout: const Duration(seconds: 8), metadata: {_skipAuth: 'true'}),
+    );
+  }
+
+  @override
+  Future<void> resetPassword({required String email, required String code, required String newPassword}) async {
+    await _client.resetPassword(
+      authpb.ResetPasswordRequest(email: email, code: code, newPassword: newPassword),
+      options: CallOptions(timeout: const Duration(seconds: 10), metadata: {_skipAuth: 'true'}),
+    );
+  }
 }
