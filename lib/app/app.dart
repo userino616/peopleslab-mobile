@@ -13,8 +13,17 @@ class App extends ConsumerWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: ZoomPageTransitionsBuilder(),
+            TargetPlatform.iOS: ZoomPageTransitionsBuilder(),
+            TargetPlatform.macOS: ZoomPageTransitionsBuilder(),
+            TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+          },
+        ),
       ),
-      initialRoute: AppRoutes.login,
+      // Use default '/' initial route to avoid stacked initial routes.
       onGenerateRoute: AppRouter.onGenerateRoute,
       // Fallback for unknown routes
       onUnknownRoute: (settings) => MaterialPageRoute(
@@ -23,4 +32,3 @@ class App extends ConsumerWidget {
     );
   }
 }
-
