@@ -57,7 +57,7 @@ class _EmailSignUpPageState extends ConsumerState<EmailSignUpPage> {
           return;
         }
         final ok = await ref.read(authControllerProvider.notifier).signUp(email, password);
-        if (!mounted) return;
+        if (!context.mounted) return;
         if (ok) {
           context.go(AppRoutes.home);
         } else {

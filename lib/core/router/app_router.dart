@@ -15,12 +15,10 @@ import 'package:peopleslab/features/auth/presentation/sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/sign_up_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_up_page.dart';
-import 'package:peopleslab/app/splash_page.dart';
 import 'package:peopleslab/core/logging/logger.dart';
 import 'package:peopleslab/core/auth/token_storage.dart';
 
 class AppRoutes {
-  static const String splash = '/';
   static const String welcome = '/welcome';
   static const String onboarding = '/onboarding';
   static const String signIn = '/signin';
@@ -48,28 +46,17 @@ class RouterNotifier extends ChangeNotifier {
   final Ref ref;
 
   RouterNotifier(this.ref) {
-    ref.listen<AuthState>(authControllerProvider, (_, _) => notifyListeners());
+    ref.listen<AuthState>(authControllerProvider, (prev, next) => notifyListeners());
     // Also refresh router when tokens change
-    ref.listen<AsyncValue<Tokens?>>(tokensStreamProvider, (_, __) => notifyListeners());
+    ref.listen<AsyncValue<Tokens?>>(tokensStreamProvider, (prev, next) => notifyListeners());
   }
 
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {
     final loc = state.matchedLocation;
-    final isSplash = loc == AppRoutes.splash;
+    final uri = state.uri.toString();
     final status = await ref.read(authStatusProvider.future);
     final statusStr = status is Authenticated ? 'authenticated' : 'unauthenticated';
-    appLogger.i('Router: redirect from="$loc" splash=$isSplash status=$statusStr');
-
-    // From splash, always decide immediately based on auth status
-    if (isSplash) {
-      if (status is Authenticated) {
-        appLogger.i('Router: splash -> home');
-        return AppRoutes.home;
-      } else {
-        appLogger.i('Router: splash -> welcome');
-        return AppRoutes.welcome;
-      }
-    }
+    appLogger.i('Router: redirect from uri="$uri" loc="$loc" status=$statusStr');
 
     if (status is Unauthenticated) {
       if (!publicRoutes.contains(loc)) {
@@ -91,16 +78,13 @@ class RouterNotifier extends ChangeNotifier {
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = RouterNotifier(ref);
   return GoRouter(
-    initialLocation: AppRoutes.splash,
+    // Use a real route; deep links override this automatically.
+    initialLocation: AppRoutes.welcome,
     debugLogDiagnostics: kDebugMode,
     navigatorKey: rootNavigatorKey,
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [
-      GoRoute(
-        path: AppRoutes.splash,
-        builder: (context, state) => const SplashPage(),
-      ),
       GoRoute(
         path: AppRoutes.welcome,
         builder: (context, state) => const WelcomePage(),
