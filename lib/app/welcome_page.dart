@@ -28,8 +28,8 @@ class WelcomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 FilledButton(
-                  onPressed: state.loading ? null : () => context.go(AppRoutes.signUp),
-                  child: Text(s.action_sign_up),
+                  onPressed: state.loading ? null : () => context.go(AppRoutes.onboarding),
+                  child: Text(s.onboarding_cta),
                 ),
                 const SizedBox(height: 8),
                 TextButton(

@@ -28,8 +28,8 @@ class OnboardingPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: () => context.go(AppRoutes.welcome),
-                child: Text(s.onboarding_cta),
+                onPressed: () => context.go(AppRoutes.signUp),
+                child: Text(s.signup_create_account),
               ),
               const SizedBox(height: 12),
               TextButton(

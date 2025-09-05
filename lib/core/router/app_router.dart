@@ -16,6 +16,7 @@ import 'package:peopleslab/features/auth/presentation/sign_up_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_up_page.dart';
 import 'package:peopleslab/app/splash_page.dart';
+import 'package:peopleslab/core/logging/logger.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -46,6 +47,7 @@ class RouterNotifier extends ChangeNotifier {
     final token = await storage.readRefreshToken();
     _hasToken = token != null && token.isNotEmpty;
     _checkedToken = true;
+    appLogger.i('Router: initial token check -> hasToken=$_hasToken');
   }
 
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {
@@ -54,11 +56,14 @@ class RouterNotifier extends ChangeNotifier {
     final isLoggedIn = user != null && token != null && token.isNotEmpty;
     final loc = state.matchedLocation;
     final isSplash = loc == AppRoutes.splash;
+    appLogger.i('Router: redirect from="$loc" isSplash=$isSplash isLoggedIn=$isLoggedIn');
 
     // Initial decision from splash based on token presence
     if (isSplash) {
       await _checkTokenOnce();
-      return _hasToken ? AppRoutes.home : AppRoutes.welcome;
+      final target = _hasToken ? AppRoutes.home : AppRoutes.welcome;
+      appLogger.i('Router: splash redirect -> $target');
+      return target;
     }
 
     // Public paths
@@ -74,6 +79,7 @@ class RouterNotifier extends ChangeNotifier {
 
     if (!isLoggedIn) {
       if (!public.contains(loc)) {
+        appLogger.i('Router: guard -> redirect to welcome');
         return AppRoutes.welcome;
       }
       return null;
@@ -81,6 +87,7 @@ class RouterNotifier extends ChangeNotifier {
 
     // If logged in and trying to access public pages, send home
     if (public.contains(loc)) {
+      appLogger.i('Router: public path while logged in -> home');
       return AppRoutes.home;
     }
     return null;
