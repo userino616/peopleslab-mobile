@@ -11,3 +11,6 @@ ClientChannelBase createChannel() {
   return GrpcWebClientChannel.xhr(uri);
 }
 
+Future<void> shutdownChannel(ClientChannelBase channel) async {
+  // No-op for web channel; underlying XHR/WebSocket closes with page lifecycle
+}

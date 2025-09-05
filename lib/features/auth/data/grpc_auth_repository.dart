@@ -6,16 +6,21 @@ import 'package:peopleslab/core/grpc/auth_interceptor.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/nav.dart';
+import 'package:peopleslab/core/logging/logger.dart';
 
 /// Placeholder implementation. Replace with real gRPC stubs after proto generation.
 class GrpcAuthRepository implements AuthRepository {
-  final ClientChannelBase channel;
+  final ClientChannelBase Function() _getChannel;
+  final AuthInterceptor Function() _getInterceptor;
   final TokenStorage storage;
-  late final authpb.AuthServiceClient _client;
+  final Future<void> Function() _onResetGrpc;
 
-  GrpcAuthRepository(this.channel, this.storage, AuthInterceptor interceptor) {
-    _client = authpb.AuthServiceClient(channel, interceptors: [interceptor]);
-    // Provide refresh + logout handlers to the interceptor
+  GrpcAuthRepository(this._getChannel, this.storage, this._getInterceptor, {required Future<void> Function() onResetGrpc})
+      : _onResetGrpc = onResetGrpc;
+
+  authpb.AuthServiceClient _client() {
+    // Ensure interceptor is configured (new instance after invalidation needs hooks)
+    final interceptor = _getInterceptor();
     interceptor.configure(
       refresh: refresh,
       onAuthFailure: () async {
@@ -23,7 +28,7 @@ class GrpcAuthRepository implements AuthRepository {
         final token = await storage.readRefreshToken();
         try {
           if (token != null && token.isNotEmpty) {
-            await _client.logout(
+            await _client().logout(
               authpb.LogoutRequest(refreshToken: token),
               options: CallOptions(timeout: const Duration(seconds: 3), metadata: {AuthInterceptor.kSkipKey: 'true'}),
             );
@@ -32,10 +37,12 @@ class GrpcAuthRepository implements AuthRepository {
           // ignore
         }
         await storage.clearTokens();
+        await _onResetGrpc();
         // Navigate back to welcome
         rootNavigatorKey.currentContext?.go('/welcome');
       },
     );
+    return authpb.AuthServiceClient(_getChannel(), interceptors: [interceptor]);
   }
 
   // todo enrich with propel user device data and probably move to conts
@@ -47,7 +54,7 @@ class GrpcAuthRepository implements AuthRepository {
 
   @override
   Future<AuthUser> signIn({required String email, required String password}) async {
-    final resp = await _client.emailSignIn(
+    final resp = await _client().emailSignIn(
       authpb.EmailSignInRequest(email: email, password: password, device: await _device()),
       options: CallOptions(timeout: const Duration(seconds: 10), metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
@@ -63,7 +70,7 @@ class GrpcAuthRepository implements AuthRepository {
 
   @override
   Future<AuthUser> signUp({required String email, required String password}) async {
-    final resp = await _client.emailSignUp(
+    final resp = await _client().emailSignUp(
       authpb.EmailSignUpRequest(email: email, password: password, device: await _device()),
       options: CallOptions(timeout: const Duration(seconds: 12), metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
@@ -81,16 +88,18 @@ class GrpcAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     final token = await storage.readRefreshToken();
     if (token == null || token.isEmpty) return;
-    await _client.logout(
+    appLogger.i('Logout: closing channel and resetting DI');
+    await _client().logout(
       authpb.LogoutRequest(refreshToken: token),
       options: CallOptions(timeout: const Duration(seconds: 5)),
     );
     await storage.clearTokens();
+    await _onResetGrpc();
   }
 
   @override
   Future<AuthUser> signInWithGoogle({required String idToken}) async {
-    final resp = await _client.socialSignIn(
+    final resp = await _client().socialSignIn(
       authpb.SocialSignInRequest(
         provider: authpb.Provider.PROVIDER_GOOGLE,
         idToken: idToken,
@@ -110,7 +119,7 @@ class GrpcAuthRepository implements AuthRepository {
 
   @override
   Future<AuthUser> signInWithApple({required String idToken}) async {
-    final resp = await _client.socialSignIn(
+    final resp = await _client().socialSignIn(
       authpb.SocialSignInRequest(
         provider: authpb.Provider.PROVIDER_APPLE,
         idToken: idToken,
@@ -132,7 +141,7 @@ class GrpcAuthRepository implements AuthRepository {
 
   @override
   Future<void> forgotPassword({required String email}) async {
-    await _client.forgotPassword(
+    await _client().forgotPassword(
       authpb.ForgotPasswordRequest(email: email),
       options: CallOptions(timeout: const Duration(seconds: 8), metadata: {_skipAuth: 'true'}),
     );
@@ -140,7 +149,7 @@ class GrpcAuthRepository implements AuthRepository {
 
   @override
   Future<void> resetPassword({required String email, required String code, required String newPassword}) async {
-    await _client.resetPassword(
+    await _client().resetPassword(
       authpb.ResetPasswordRequest(email: email, code: code, newPassword: newPassword),
       options: CallOptions(timeout: const Duration(seconds: 10), metadata: {_skipAuth: 'true'}),
     );
@@ -150,7 +159,7 @@ class GrpcAuthRepository implements AuthRepository {
   Future<bool> refresh() async {
     final token = await storage.readRefreshToken();
     if (token == null || token.isEmpty) return false;
-    final resp = await _client.refresh(
+    final resp = await _client().refresh(
       authpb.RefreshRequest(refreshToken: token),
       options: CallOptions(timeout: const Duration(seconds: 6), metadata: {_skipAuth: 'true'}),
     );

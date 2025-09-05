@@ -16,3 +16,8 @@ ClientChannelBase createChannel() {
   );
 }
 
+Future<void> shutdownChannel(ClientChannelBase channel) async {
+  if (channel is ClientChannel) {
+    await channel.shutdown();
+  }
+}

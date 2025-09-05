@@ -7,4 +7,5 @@ import 'grpc_channel_io.dart' if (dart.library.html) 'grpc_channel_web.dart'
 
 class GrpcClientFactory {
   static ClientChannelBase createChannel() => impl.createChannel();
+  static Future<void> shutdownChannel(ClientChannelBase channel) => impl.shutdownChannel(channel);
 }
