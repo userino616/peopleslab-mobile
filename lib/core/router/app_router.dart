@@ -1,52 +1,133 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peopleslab/app/home_page.dart';
 import 'package:peopleslab/app/onboarding_page.dart';
 import 'package:peopleslab/app/welcome_page.dart';
-import 'package:peopleslab/features/auth/presentation/sign_in_page.dart';
+import 'package:peopleslab/core/providers.dart';
+import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:peopleslab/features/auth/presentation/forgot_password_page.dart';
+import 'package:peopleslab/features/auth/presentation/sign_in_page.dart';
+import 'package:peopleslab/features/auth/presentation/sign_up_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_up_page.dart';
-import 'package:peopleslab/features/auth/presentation/sign_up_page.dart';
-// Removed recovery options chooser; go straight to email recovery page.
+import 'package:peopleslab/app/splash_page.dart';
 
 class AppRoutes {
-  static const String signIn = '/sign-in';
-  static const String emailSignIn = '/sign-in/email';
-  static const String signUp = '/sign-up';
-  static const String emailSignUp = '/sign-up/email';
-  static const String home = '/home';
+  static const String splash = '/';
   static const String welcome = '/welcome';
+  static const String onboarding = '/onboarding';
+  static const String signIn = '/signin';
+  static const String signUp = '/signup';
   static const String forgotPassword = '/forgot-password';
-  // Removed separate reset routes: handled within ForgotPasswordPage
+  static const String home = '/home';
+
+  // Optional nested flows kept for existing UI
+  static const String emailSignIn = '/signin/email';
+  static const String emailSignUp = '/signup/email';
 }
 
-class AppRouter {
-  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    switch (settings.name) {
-      case '/':
-        return MaterialPageRoute(builder: (_) => const OnboardingPage());
-      case AppRoutes.signIn:
-        return MaterialPageRoute(builder: (_) => const SignInPage());
-      case AppRoutes.welcome:
-        return MaterialPageRoute(builder: (_) => const WelcomePage());
-      case AppRoutes.signUp:
-        return MaterialPageRoute(
-          builder: (_) => const SignUpPage(),
-        );
-      case AppRoutes.emailSignUp:
-        return MaterialPageRoute(
-          builder: (_) => const EmailSignUpPage(),
-        );
-      case AppRoutes.emailSignIn:
-        return MaterialPageRoute(
-          builder: (_) => const EmailSignIn(),
-        );
-      case AppRoutes.home:
-        return MaterialPageRoute(builder: (_) => const HomePage());
-      case AppRoutes.forgotPassword:
-        return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
-      default:
-        return MaterialPageRoute(builder: (_) => const SignInPage());
+class RouterNotifier extends ChangeNotifier {
+  final Ref ref;
+  bool _checkedToken = false;
+  bool _hasToken = false;
+
+  RouterNotifier(this.ref) {
+    ref.listen<AuthState>(authControllerProvider, (_, __) => notifyListeners());
+  }
+
+  Future<void> _checkTokenOnce() async {
+    if (_checkedToken) return;
+    final storage = ref.read(tokenStorageProvider);
+    final token = await storage.readRefreshToken();
+    _hasToken = token != null && token.isNotEmpty;
+    _checkedToken = true;
+  }
+
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {
+    final isLoggedIn = ref.read(authControllerProvider).user != null;
+    final loc = state.matchedLocation;
+    final isSplash = loc == AppRoutes.splash;
+
+    // Initial decision from splash based on token presence
+    if (isSplash) {
+      await _checkTokenOnce();
+      return _hasToken ? AppRoutes.home : AppRoutes.welcome;
     }
+
+    // Public paths
+    const public = {
+      AppRoutes.welcome,
+      AppRoutes.onboarding,
+      AppRoutes.signIn,
+      AppRoutes.signUp,
+      AppRoutes.forgotPassword,
+      AppRoutes.emailSignIn,
+      AppRoutes.emailSignUp,
+    };
+
+    if (!isLoggedIn) {
+      if (!public.contains(loc)) {
+        return AppRoutes.welcome;
+      }
+      return null;
+    }
+
+    // If logged in and trying to access public pages, send home
+    if (public.contains(loc)) {
+      return AppRoutes.home;
+    }
+    return null;
   }
 }
+
+final goRouterProvider = Provider<GoRouter>((ref) {
+  final notifier = RouterNotifier(ref);
+  return GoRouter(
+    initialLocation: AppRoutes.splash,
+    debugLogDiagnostics: kDebugMode,
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
+    routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (context, state) => const SplashPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.welcome,
+        builder: (context, state) => const WelcomePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.signIn,
+        builder: (context, state) => const SignInPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.signUp,
+        builder: (context, state) => const SignUpPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.emailSignIn,
+        builder: (context, state) => const EmailSignIn(),
+      ),
+      GoRoute(
+        path: AppRoutes.emailSignUp,
+        builder: (context, state) => const EmailSignUpPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (context, state) => const HomePage(),
+      ),
+    ],
+  );
+});

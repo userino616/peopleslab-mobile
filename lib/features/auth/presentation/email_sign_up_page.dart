@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/common/widgets/primary_button.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/core/utils/validators.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
@@ -41,7 +42,7 @@ class _EmailSignUpPageState extends ConsumerState<EmailSignUpPage> {
         .signUp(_emailCtrl.text.trim(), _passCtrl.text);
     if (!mounted) return;
     if (ok) {
-      Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (r) => false);
+      context.go(AppRoutes.home);
     } else {
       final err = ref.read(authControllerProvider).errorMessage ?? 'Sign up failed';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
@@ -105,4 +106,3 @@ class _EmailSignUpPageState extends ConsumerState<EmailSignUpPage> {
     );
   }
 }
-

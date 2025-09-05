@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:peopleslab/app/home_page.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 
 class App extends ConsumerWidget {
@@ -8,7 +7,8 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
+    final router = ref.watch(goRouterProvider);
+    return MaterialApp.router(
       title: 'PeoplesLab',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
@@ -23,12 +23,7 @@ class App extends ConsumerWidget {
           },
         ),
       ),
-      // Use default '/' initial route to avoid stacked initial routes.
-      onGenerateRoute: AppRouter.onGenerateRoute,
-      // Fallback for unknown routes
-      onUnknownRoute: (settings) => MaterialPageRoute(
-        builder: (_) => const HomePage(),
-      ),
+      routerConfig: router,
     );
   }
 }

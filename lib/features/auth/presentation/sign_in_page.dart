@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 
@@ -27,14 +28,14 @@ class SignInPage extends ConsumerWidget {
                 OutlinedButton(
                   onPressed: state.loading
                       ? null
-                      : () => Navigator.of(context).pushNamed(AppRoutes.emailSignIn),
+                      : () => context.push(AppRoutes.emailSignIn),
                   child: const Text('Увійти по e‑mail'),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: state.loading
                       ? null
-                      : () => Navigator.of(context).pushNamed(AppRoutes.forgotPassword),
+                      : () => context.push(AppRoutes.forgotPassword),
                   child: const Text("Don't remember how you logged in?"),
                 ),
               ],
@@ -59,7 +60,7 @@ class _SocialButtons extends ConsumerWidget {
           final ok = await notifier.signInWithGoogle();
           if (!context.mounted) return;
           if (ok) {
-            Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (r) => false);
+            context.go(AppRoutes.home);
           } else {
             final err = ref.read(authControllerProvider).errorMessage;
             if (err != null) {
@@ -78,7 +79,7 @@ class _SocialButtons extends ConsumerWidget {
             final ok = await notifier.signInWithApple();
             if (!context.mounted) return;
             if (ok) {
-              Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (r) => false);
+              context.go(AppRoutes.home);
             } else {
               final err = ref.read(authControllerProvider).errorMessage;
               if (err != null) {

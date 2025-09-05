@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 
 class OnboardingPage extends StatelessWidget {
@@ -25,12 +26,12 @@ class OnboardingPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: () => Navigator.of(context).pushNamed(AppRoutes.welcome),
+                onPressed: () => context.go(AppRoutes.welcome),
                 child: const Text('Onboard'),
               ),
               const SizedBox(height: 12),
               TextButton(
-                onPressed: () => Navigator.of(context).pushNamed(AppRoutes.signIn),
+                onPressed: () => context.go(AppRoutes.signIn),
                 child: const Text('Already have an account? Sign in'),
               )
             ],
@@ -40,4 +41,3 @@ class OnboardingPage extends StatelessWidget {
     );
   }
 }
-

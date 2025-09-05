@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 
@@ -25,12 +26,12 @@ class WelcomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 FilledButton(
-                  onPressed: state.loading ? null : () => Navigator.of(context).pushNamed(AppRoutes.signUp),
+                  onPressed: state.loading ? null : () => context.go(AppRoutes.signUp),
                   child: const Text('Sign up'),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: state.loading ? null : () => Navigator.of(context).pushNamed(AppRoutes.signIn),
+                  onPressed: state.loading ? null : () => context.go(AppRoutes.signIn),
                   child: const Text('Already have an account? Sign in'),
                 ),
               ],

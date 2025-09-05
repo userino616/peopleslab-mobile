@@ -22,6 +22,7 @@ dependencies:
   logger: ^2.4.0
   google_sign_in: ^6.2.1
   sign_in_with_apple: ^5.0.0
+  go_router: ^14.2.0
 
   # ВАЖЛИВО: тимчасово тримаємо 4.1.x, бо grpc >=4.2.0 вимагає meta ^1.17.0,
   # а flutter_test у твоєму SDK пінить meta на 1.16.0.

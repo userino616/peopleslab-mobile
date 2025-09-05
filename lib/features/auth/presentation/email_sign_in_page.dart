@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/common/widgets/primary_button.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/core/utils/validators.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
@@ -31,7 +32,7 @@ class _EmailSignInPageState extends ConsumerState<EmailSignIn> {
         .signIn(_emailCtrl.text.trim(), _passCtrl.text);
     if (!mounted) return;
     if (ok) {
-      Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (r) => false);
+      context.go(AppRoutes.home);
     } else {
       final err = ref.read(authControllerProvider).errorMessage ?? 'Sign in failed';
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
@@ -74,10 +75,7 @@ class _EmailSignInPageState extends ConsumerState<EmailSignIn> {
                     child: TextButton(
                       onPressed: state.loading
                           ? null
-                          : () => Navigator.of(context).pushNamed(
-                                AppRoutes.forgotPassword,
-                                arguments: {'email': _emailCtrl.text.trim()},
-                              ),
+                          : () => context.push(AppRoutes.forgotPassword),
                       child: const Text('Забули пароль?'),
                     ),
                   ),

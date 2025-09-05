@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 
@@ -27,7 +28,7 @@ class SignUpPage extends ConsumerWidget {
                     final ok = await notifier.signInWithGoogle();
                     if (!context.mounted) return;
                     if (ok) {
-                      Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (r) => false);
+                      context.go(AppRoutes.home);
                     } else {
                       final err = ref.read(authControllerProvider).errorMessage;
                       if (err != null) {
@@ -44,7 +45,7 @@ class SignUpPage extends ConsumerWidget {
                       final ok = await notifier.signInWithApple();
                       if (!context.mounted) return;
                       if (ok) {
-                        Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (r) => false);
+                        context.go(AppRoutes.home);
                       } else {
                         final err = ref.read(authControllerProvider).errorMessage;
                         if (err != null) {
@@ -57,12 +58,12 @@ class SignUpPage extends ConsumerWidget {
                 ],
                 const SizedBox(height: 8),
                 FilledButton(
-                  onPressed: state.loading ? null : () => Navigator.of(context).pushNamed(AppRoutes.emailSignUp),
+                  onPressed: state.loading ? null : () => context.push(AppRoutes.emailSignUp),
                   child: const Text('Create an account'),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: state.loading ? null : () => Navigator.of(context).pushNamed(AppRoutes.signIn),
+                  onPressed: state.loading ? null : () => context.go(AppRoutes.signIn),
                   child: const Text('Already have an account? Sign in'),
                 ),
               ],
