@@ -34,10 +34,7 @@ class OnboardingPage extends StatelessWidget {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.push(AppRoutes.signIn),
-                child: Text.rich(TextSpan(children: [
-                  TextSpan(text: s.cta_already_have_account),
-                  TextSpan(text: s.action_sign_in),
-                ])),
+                child: Text(s.cta_already_have_account),
               )
             ],
           ),

@@ -179,9 +179,13 @@ class TokenStorage {
         await _store.write(key: _kRefresh, value: refreshToken);
         if (accessExpMs != null) {
           await _store.write(key: _kAccessExp, value: accessExpMs.toString());
+        } else {
+          await _store.delete(key: _kAccessExp);
         }
         if (refreshExpMs != null) {
           await _store.write(key: _kRefreshExp, value: refreshExpMs.toString());
+        } else {
+          await _store.delete(key: _kRefreshExp);
         }
         // Update cache only after successful writes
         _cache = Tokens(
@@ -242,8 +246,7 @@ class TokenStorage {
     });
   }
 
-  /// Alias per spec
-  Future<void> clear() => clearTokens();
+  // Note: prefer using clearTokens() explicitly to keep API precise.
 
   // ----- Utilities -----
   /// Returns true if access token is considered expired using a skew window.

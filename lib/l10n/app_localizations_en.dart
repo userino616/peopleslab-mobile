@@ -33,10 +33,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboarding_cta => 'Get started';
 
   @override
-  String get cta_already_have_account => 'Already have an account?';
-
-  @override
-  String get action_sign_in => 'Sign in';
+  String get cta_already_have_account => 'Already have an account? Sign in';
 
   @override
   String get action_sign_up => 'Sign up';

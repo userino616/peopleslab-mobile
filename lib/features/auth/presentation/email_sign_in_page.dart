@@ -30,9 +30,7 @@ class _EmailSignInPageState extends ConsumerState<EmailSignIn> {
       onSubmit: (email, password) async {
         final ok = await ref.read(authControllerProvider.notifier).signIn(email, password);
         if (!context.mounted) return;
-        if (ok) {
-          context.go(AppRoutes.home);
-        } else {
+        if (!ok) {
           final code = ref.read(authControllerProvider).errorMessage;
           showAuthSnack(context, code);
         }

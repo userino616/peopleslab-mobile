@@ -144,14 +144,8 @@ abstract class AppLocalizations {
   /// No description provided for @cta_already_have_account.
   ///
   /// In en, this message translates to:
-  /// **'Already have an account?'**
+  /// **'Already have an account? Sign in'**
   String get cta_already_have_account;
-
-  /// No description provided for @action_sign_in.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in'**
-  String get action_sign_in;
 
   /// No description provided for @action_sign_up.
   ///

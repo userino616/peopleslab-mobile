@@ -62,9 +62,7 @@ class _SocialButtons extends ConsumerWidget {
         onPressed: state.loading ? null : () async {
           final ok = await notifier.signInWithGoogle();
           if (!context.mounted) return;
-          if (ok) {
-            context.go(AppRoutes.home);
-          } else {
+          if (!ok) {
             final code = ref.read(authControllerProvider).errorMessage;
             final msg = localizeError(context, code);
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -80,9 +78,7 @@ class _SocialButtons extends ConsumerWidget {
           onPressed: state.loading ? null : () async {
             final ok = await notifier.signInWithApple();
             if (!context.mounted) return;
-            if (ok) {
-              context.go(AppRoutes.home);
-            } else {
+            if (!ok) {
               final code = ref.read(authControllerProvider).errorMessage;
               final msg = localizeError(context, code);
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));

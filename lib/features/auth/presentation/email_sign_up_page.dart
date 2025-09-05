@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/core/utils/validators.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/core/l10n/l10n_helpers.dart';
@@ -58,9 +56,7 @@ class _EmailSignUpPageState extends ConsumerState<EmailSignUpPage> {
         }
         final ok = await ref.read(authControllerProvider.notifier).signUp(email, password);
         if (!context.mounted) return;
-        if (ok) {
-          context.go(AppRoutes.home);
-        } else {
+        if (!ok) {
           final code = ref.read(authControllerProvider).errorMessage;
           showAuthSnack(context, code);
         }

@@ -9,8 +9,7 @@
   "brand_name": "PeoplesLab",
   "onboarding_intro": "Welcome! Let's get started.",
   "onboarding_cta": "Get started",
-  "cta_already_have_account": "Already have an account?",
-  "action_sign_in": "Sign in",
+  "cta_already_have_account": "Already have an account? Sign in",
   "action_sign_up": "Sign up",
 
   "welcome_appbar_title": "Welcome",

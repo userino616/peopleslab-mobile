@@ -30,9 +30,7 @@ class SignUpPage extends ConsumerWidget {
                   onPressed: state.loading ? null : () async {
                     final ok = await notifier.signInWithGoogle();
                     if (!context.mounted) return;
-                    if (ok) {
-                      context.go(AppRoutes.home);
-                    } else {
+                    if (!ok) {
                       final code = ref.read(authControllerProvider).errorMessage;
                       final msg = localizeError(context, code);
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -46,9 +44,7 @@ class SignUpPage extends ConsumerWidget {
                     onPressed: state.loading ? null : () async {
                       final ok = await notifier.signInWithApple();
                       if (!context.mounted) return;
-                      if (ok) {
-                        context.go(AppRoutes.home);
-                      } else {
+                      if (!ok) {
                         final code = ref.read(authControllerProvider).errorMessage;
                         final msg = localizeError(context, code);
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -65,10 +61,7 @@ class SignUpPage extends ConsumerWidget {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: state.loading ? null : () => context.push(AppRoutes.signIn),
-                  child: Text.rich(TextSpan(children: [
-                    TextSpan(text: s.cta_already_have_account),
-                    TextSpan(text: s.action_sign_in),
-                  ])),
+                  child: Text(s.cta_already_have_account),
                 ),
               ],
             ),
