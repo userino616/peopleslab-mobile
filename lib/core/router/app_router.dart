@@ -17,6 +17,7 @@ import 'package:peopleslab/features/auth/presentation/email_sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_up_page.dart';
 import 'package:peopleslab/app/splash_page.dart';
 import 'package:peopleslab/core/logging/logger.dart';
+import 'package:peopleslab/core/auth/token_storage.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -48,6 +49,8 @@ class RouterNotifier extends ChangeNotifier {
 
   RouterNotifier(this.ref) {
     ref.listen<AuthState>(authControllerProvider, (_, _) => notifyListeners());
+    // Also refresh router when tokens change
+    ref.listen<AsyncValue<Tokens?>>(tokensStreamProvider, (_, __) => notifyListeners());
   }
 
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {

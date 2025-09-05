@@ -1,17 +1,16 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
-import 'package:grpc/grpc_connection_interface.dart' show ClientChannelBase;
 import 'package:peopleslab/core/auth/token_storage.dart';
+import 'package:peopleslab/core/logging/logger.dart';
+import 'package:uuid/uuid.dart';
 
 class AuthInterceptor extends ClientInterceptor {
   // Public so callers can share the same key
   static const kSkipKey = 'x-skip-auth';
-
-  final ClientChannelBase channel;
   final TokenStorage storage;
 
-  AuthInterceptor({required this.channel, required this.storage});
+  AuthInterceptor({required this.storage});
 
   // External hooks supplied by repository
   Future<bool> Function()? _refresh;
@@ -60,14 +59,19 @@ class AuthInterceptor extends ClientInterceptor {
     }
   }
 
-  Future<void> _handleAuthFailure() async {
+  void _handleAuthFailureAsync() {
     final onFail = _onAuthFailure;
     if (onFail != null) {
-      await onFail();
+      // Fire-and-forget: do not block the network path
+      Future.microtask(() async {
+        try {
+          await onFail();
+        } catch (_) {}
+      });
     }
   }
 
-  // Unary with pre-send refresh (mutex) and token injection
+  // Unary with optional soft pre-refresh -> attach -> 401 refresh -> single retry
   @override
   ResponseFuture<R> interceptUnary<Q, R>(
     ClientMethod<Q, R> method,
@@ -77,35 +81,53 @@ class AuthInterceptor extends ClientInterceptor {
   ) {
     final skip = _shouldSkip(options);
 
-    FutureOr<void> provider(Map<String, String> md, String uri) async {
-      // Never send local-only control header to the server
-      md.remove(kSkipKey);
-      if (skip) return;
-      // Check if we need to refresh before sending the request
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final exp = await storage.readAccessExpiryMillis();
-      final access = await storage.readAccessToken();
-      // 5s skew window
-      final needsRefresh =
-          (access == null || access.isEmpty) || (exp != null && exp <= now + 5000);
-
-      if (needsRefresh) {
-        bool ok = false;
-        try {
-          ok = await _refreshGuarded();
-        } catch (_) {
-          ok = false;
+    // Helper to build options with metadata injection and soft pre-refresh
+    CallOptions withHeaders({required String requestId, required int attempt}) {
+      FutureOr<void> provider(Map<String, String> md, String uri) async {
+        // Clean internal headers
+        md.remove(kSkipKey);
+        // Attach request id for traceability
+        if (!md.containsKey('x-request-id')) {
+          md['x-request-id'] = requestId;
         }
-        if (!ok) {
-          await _handleAuthFailure();
-          throw GrpcError.unauthenticated('Unable to refresh token');
+        // Attach attempt for observability (1 or 2)
+        md['x-request-attempt'] = attempt.toString();
+        // Soft pre-refresh: try once if token clearly missing/expired, but don't fail if it doesn't help
+        if (!skip) {
+          try {
+            final now = DateTime.now().millisecondsSinceEpoch;
+            final exp = await storage.readAccessExpiryMillis();
+            final access = await storage.readAccessToken();
+            final needsRefresh = (access == null || access.isEmpty) || (exp != null && exp <= now + 5000);
+            if (needsRefresh) {
+              appLogger.i('auth_interceptor|pre_refresh:start id=$requestId path=${method.path}');
+              final ok = await _refreshGuarded();
+              appLogger.i('auth_interceptor|pre_refresh:end ok=$ok id=$requestId');
+            }
+          } catch (e) {
+            appLogger.w('auth_interceptor|pre_refresh:end error=$e id=$requestId');
+          }
         }
+        // Attach auth header if not skipped
+        await _attachAuthIfNeeded(md, skip);
+        final tag = skip ? 'attach skip' : 'attach';
+        appLogger.t('auth_interceptor|$tag id=$requestId attempt=$attempt path=${method.path}');
       }
 
-      await _attachAuthIfNeeded(md, false);
+      return options.mergedWith(CallOptions(providers: [provider]));
     }
 
-    final newOptions = options.mergedWith(CallOptions(providers: [provider]));
-    return invoker(method, request, newOptions);
+    final requestId = const Uuid().v4();
+    final call = invoker(method, request, withHeaders(requestId: requestId, attempt: 1));
+    // Side-effect: if 401 occurs, trigger async auth-failure handling
+    call.catchError((Object e, StackTrace st) {
+      if (e is GrpcError && e.code == StatusCode.unauthenticated && !skip) {
+        appLogger.w('auth_interceptor|401 id=$requestId attempt=1 path=${method.path}');
+        _handleAuthFailureAsync();
+      }
+      // Re-throw to avoid swallowing the error in this side-effect future
+      throw e;
+    });
+    return call;
   }
 }

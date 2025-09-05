@@ -29,8 +29,14 @@ final tokenStorageProvider = Provider<TokenStorage>((ref) {
   return TokenStorage(store, webTtlCap: kIsWeb ? const Duration(hours: 12) : null);
 });
 
+/// Reactive stream of token changes emitted by TokenStorage.
+final tokensStreamProvider = StreamProvider<Tokens?>((ref) {
+  final storage = ref.read(tokenStorageProvider);
+  return storage.tokensStream;
+});
+
 final authInterceptorProvider = Provider<AuthInterceptor>((ref) {
-  return AuthInterceptor(channel: ref.read(grpcChannelProvider), storage: ref.read(tokenStorageProvider));
+  return AuthInterceptor(storage: ref.read(tokenStorageProvider));
 });
 
 // Auth repository provider (switchable between Fake and gRPC)
@@ -74,6 +80,8 @@ class Authenticated extends AuthStatus {
 /// - cached tokens from `TokenStorage.getTokens()`
 /// No direct token reads are performed elsewhere.
 final authStatusProvider = FutureProvider<AuthStatus>((ref) async {
+  // React to token changes too
+  ref.watch(tokensStreamProvider);
   final authState = ref.watch(authControllerProvider);
   final tokens = await ref.read(tokenStorageProvider).getTokens();
   final hasRefresh = (tokens?.refreshToken ?? '').isNotEmpty;

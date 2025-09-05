@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
+import 'package:peopleslab/core/logging/logger.dart';
 
 /// Simple DTO for tokens kept in memory cache
 class Tokens {
@@ -77,6 +78,10 @@ class TokenStorage {
 
   // Simple async mutex to serialize writes (avoid races)
   Completer<void>? _writeLock;
+
+  // Reactive updates: broadcast token changes on writes/clear
+  final StreamController<Tokens?> _tokensController = StreamController<Tokens?>.broadcast();
+  Stream<Tokens?> get tokensStream => _tokensController.stream;
 
   Future<T> _withWriteLock<T>(Future<T> Function() action) async {
     while (_writeLock != null) {
@@ -185,6 +190,9 @@ class TokenStorage {
           accessExpiryMillis: accessExpMs,
           refreshExpiryMillis: refreshExpMs,
         );
+        // Emit change event
+        appLogger.i('TokenStorage: emit write (access?=${_cache?.accessToken != null}, refresh?=${_cache?.refreshToken != null})');
+        _tokensController.add(_cache);
       } catch (e) {
         // Rollback best-effort to previous values
         if (prev?.accessToken != null) {
@@ -228,11 +236,34 @@ class TokenStorage {
       await _store.delete(key: _kAccessExp);
       await _store.delete(key: _kRefreshExp);
       _cache = const Tokens();
+      // Emit change event
+      appLogger.i('TokenStorage: emit clear');
+      _tokensController.add(_cache);
     });
   }
 
   /// Alias per spec
   Future<void> clear() => clearTokens();
+
+  // ----- Utilities -----
+  /// Returns true if access token is considered expired using a skew window.
+  Future<bool> isAccessExpired({int skewMillis = 5000}) async {
+    await _ensureCacheLoaded();
+    final exp = _cache?.accessExpiryMillis;
+    if (exp == null) return true;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    return exp <= now + skewMillis;
+  }
+
+  /// Remaining TTL for access token; null if unknown; zero if already expired.
+  Future<Duration?> accessTtl() async {
+    await _ensureCacheLoaded();
+    final exp = _cache?.accessExpiryMillis;
+    if (exp == null) return null;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final delta = exp - now;
+    return Duration(milliseconds: delta < 0 ? 0 : delta);
+  }
 
   // Device id with small in-memory cache as well
   String? _deviceIdCache;
