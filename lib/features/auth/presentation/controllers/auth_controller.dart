@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:peopleslab/core/providers.dart';
+import 'package:peopleslab/core/di/providers.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';

@@ -8,7 +8,7 @@ import 'package:peopleslab/core/router/nav.dart';
 import 'package:peopleslab/app/home_page.dart';
 import 'package:peopleslab/app/onboarding_page.dart';
 import 'package:peopleslab/app/welcome_page.dart';
-import 'package:peopleslab/core/providers.dart';
+import 'package:peopleslab/core/di/providers.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:peopleslab/features/auth/presentation/forgot_password_page.dart';
 import 'package:peopleslab/features/auth/presentation/sign_in_page.dart';
