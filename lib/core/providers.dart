@@ -8,6 +8,7 @@ import 'package:peopleslab/core/grpc/auth_interceptor.dart';
 import 'package:peopleslab/core/grpc/grpc_channel.dart';
 import 'package:peopleslab/features/auth/data/grpc_auth_repository.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
+import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 
 // gRPC channel provider
 final grpcChannelProvider = Provider<ClientChannelBase>((ref) {
@@ -48,4 +49,37 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   }
 
   return GrpcAuthRepository(getChannel, storage, getInterceptor, onResetGrpc: resetGrpc);
+});
+
+// ---- Auth status (single source of truth) ----
+
+/// Marker base class for auth status.
+abstract class AuthStatus {
+  const AuthStatus();
+}
+
+/// Unauthenticated state.
+class Unauthenticated extends AuthStatus {
+  const Unauthenticated();
+}
+
+/// Authenticated state with a user.
+class Authenticated extends AuthStatus {
+  final AuthUser user;
+  const Authenticated(this.user);
+}
+
+/// Computed provider for current auth status, based solely on:
+/// - `authController.user`
+/// - cached tokens from `TokenStorage.getTokens()`
+/// No direct token reads are performed elsewhere.
+final authStatusProvider = FutureProvider<AuthStatus>((ref) async {
+  final authState = ref.watch(authControllerProvider);
+  final tokens = await ref.read(tokenStorageProvider).getTokens();
+  final hasRefresh = (tokens?.refreshToken ?? '').isNotEmpty;
+  final user = authState.user;
+  if (user != null && hasRefresh) {
+    return Authenticated(user);
+  }
+  return const Unauthenticated();
 });

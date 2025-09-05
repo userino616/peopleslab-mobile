@@ -30,7 +30,7 @@ class GrpcAuthRepository implements AuthRepository {
           if (token != null && token.isNotEmpty) {
             await _client().logout(
               authpb.LogoutRequest(refreshToken: token),
-              options: CallOptions(timeout: const Duration(seconds: 3), metadata: {AuthInterceptor.kSkipKey: 'true'}),
+              options: CallOptions(timeout: const Duration(seconds: 3), metadata: {AuthInterceptor.kSkipKey: 'true'}), // todo чому зараз різні таймаути по всьому проекту?
             );
           }
         } catch (_) {

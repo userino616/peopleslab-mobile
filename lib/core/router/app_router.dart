@@ -32,62 +32,53 @@ class AppRoutes {
   static const String emailSignUp = '/signup/email';
 }
 
+// Public routes (no auth required)
+const Set<String> publicRoutes = {
+  AppRoutes.welcome,
+  AppRoutes.onboarding,
+  AppRoutes.signIn,
+  AppRoutes.signUp,
+  AppRoutes.forgotPassword,
+  AppRoutes.emailSignIn,
+  AppRoutes.emailSignUp,
+};
+
 class RouterNotifier extends ChangeNotifier {
   final Ref ref;
-  bool _checkedToken = false;
-  bool _hasToken = false;
 
   RouterNotifier(this.ref) {
     ref.listen<AuthState>(authControllerProvider, (_, _) => notifyListeners());
   }
 
-  Future<void> _checkTokenOnce() async {
-    if (_checkedToken) return;
-    final storage = ref.read(tokenStorageProvider);
-    final token = await storage.readRefreshToken();
-    _hasToken = token != null && token.isNotEmpty;
-    _checkedToken = true;
-    appLogger.i('Router: initial token check -> hasToken=$_hasToken');
-  }
-
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {
-    final user = ref.read(authControllerProvider).user;
-    final token = await ref.read(tokenStorageProvider).readRefreshToken();
-    final isLoggedIn = user != null && token != null && token.isNotEmpty;
     final loc = state.matchedLocation;
     final isSplash = loc == AppRoutes.splash;
-    appLogger.i('Router: redirect from="$loc" isSplash=$isSplash isLoggedIn=$isLoggedIn');
+    final status = await ref.read(authStatusProvider.future);
+    final statusStr = status is Authenticated ? 'authenticated' : 'unauthenticated';
+    appLogger.i('Router: redirect from="$loc" splash=$isSplash status=$statusStr');
 
-    // Initial decision from splash based on token presence
+    // From splash, always decide immediately based on auth status
     if (isSplash) {
-      await _checkTokenOnce();
-      final target = _hasToken ? AppRoutes.home : AppRoutes.welcome;
-      appLogger.i('Router: splash redirect -> $target');
-      return target;
+      if (status is Authenticated) {
+        appLogger.i('Router: splash -> home');
+        return AppRoutes.home;
+      } else {
+        appLogger.i('Router: splash -> welcome');
+        return AppRoutes.welcome;
+      }
     }
 
-    // Public paths
-    const public = {
-      AppRoutes.welcome,
-      AppRoutes.onboarding,
-      AppRoutes.signIn,
-      AppRoutes.signUp,
-      AppRoutes.forgotPassword,
-      AppRoutes.emailSignIn,
-      AppRoutes.emailSignUp,
-    };
-
-    if (!isLoggedIn) {
-      if (!public.contains(loc)) {
-        appLogger.i('Router: guard -> redirect to welcome');
+    if (status is Unauthenticated) {
+      if (!publicRoutes.contains(loc)) {
+        appLogger.i('Router: unauthenticated guard -> welcome');
         return AppRoutes.welcome;
       }
       return null;
     }
 
-    // If logged in and trying to access public pages, send home
-    if (public.contains(loc)) {
-      appLogger.i('Router: public path while logged in -> home');
+    // If authenticated and trying to access public pages, send home
+    if (publicRoutes.contains(loc)) {
+      appLogger.i('Router: public while authenticated -> home');
       return AppRoutes.home;
     }
     return null;
