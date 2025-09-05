@@ -4,8 +4,6 @@ import 'package:peopleslab_api/auth/v1/service.pbgrpc.dart' as authpb;
 import 'package:peopleslab/core/auth/token_storage.dart';
 import 'package:peopleslab/core/grpc/auth_interceptor.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
-import 'package:go_router/go_router.dart';
-import 'package:peopleslab/core/router/nav.dart';
 import 'package:peopleslab/core/logging/logger.dart';
 
 /// Placeholder implementation. Replace with real gRPC stubs after proto generation.
@@ -30,7 +28,7 @@ class GrpcAuthRepository implements AuthRepository {
           if (token != null && token.isNotEmpty) {
             await _client().logout(
               authpb.LogoutRequest(refreshToken: token),
-              options: CallOptions(timeout: const Duration(seconds: 3), metadata: {AuthInterceptor.kSkipKey: 'true'}), // todo чому зараз різні таймаути по всьому проекту?
+              options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
             );
           }
         } catch (_) {
@@ -38,8 +36,7 @@ class GrpcAuthRepository implements AuthRepository {
         }
         await storage.clearTokens();
         await _onResetGrpc();
-        // Navigate back to welcome
-        rootNavigatorKey.currentContext?.go('/welcome');
+        // No explicit navigation; Router redirect handles unauthenticated state.
       },
     );
     return authpb.AuthServiceClient(_getChannel(), interceptors: [interceptor]);
@@ -56,7 +53,7 @@ class GrpcAuthRepository implements AuthRepository {
   Future<AuthUser> signIn({required String email, required String password}) async {
     final resp = await _client().emailSignIn(
       authpb.EmailSignInRequest(email: email, password: password, device: await _device()),
-      options: CallOptions(timeout: const Duration(seconds: 10), metadata: {AuthInterceptor.kSkipKey: 'true'}),
+      options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
     await storage.writeTokens(
       accessToken: resp.accessToken,
@@ -72,7 +69,7 @@ class GrpcAuthRepository implements AuthRepository {
   Future<AuthUser> signUp({required String email, required String password}) async {
     final resp = await _client().emailSignUp(
       authpb.EmailSignUpRequest(email: email, password: password, device: await _device()),
-      options: CallOptions(timeout: const Duration(seconds: 12), metadata: {AuthInterceptor.kSkipKey: 'true'}),
+      options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
     await storage.writeTokens(
       accessToken: resp.accessToken,
@@ -91,7 +88,6 @@ class GrpcAuthRepository implements AuthRepository {
     appLogger.i('Logout: closing channel and resetting DI');
     await _client().logout(
       authpb.LogoutRequest(refreshToken: token),
-      options: CallOptions(timeout: const Duration(seconds: 5)),
     );
     await storage.clearTokens();
     await _onResetGrpc();
@@ -105,7 +101,7 @@ class GrpcAuthRepository implements AuthRepository {
         idToken: idToken,
         device: await _device(),
       ),
-      options: CallOptions(timeout: const Duration(seconds: 10), metadata: {_skipAuth: 'true'}),
+      options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
     await storage.writeTokens(
       accessToken: resp.accessToken,
@@ -125,7 +121,7 @@ class GrpcAuthRepository implements AuthRepository {
         idToken: idToken,
         device: await _device(),
       ),
-      options: CallOptions(timeout: const Duration(seconds: 10), metadata: {_skipAuth: 'true'}),
+      options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
     await storage.writeTokens(
       accessToken: resp.accessToken,
@@ -137,13 +133,11 @@ class GrpcAuthRepository implements AuthRepository {
     return AuthUser(id: user.id, email: user.email);
   }
 
-  static const _skipAuth = AuthInterceptor.kSkipKey;
-
   @override
   Future<void> forgotPassword({required String email}) async {
     await _client().forgotPassword(
       authpb.ForgotPasswordRequest(email: email),
-      options: CallOptions(timeout: const Duration(seconds: 8), metadata: {_skipAuth: 'true'}),
+      options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
   }
 
@@ -151,7 +145,7 @@ class GrpcAuthRepository implements AuthRepository {
   Future<void> resetPassword({required String email, required String code, required String newPassword}) async {
     await _client().resetPassword(
       authpb.ResetPasswordRequest(email: email, code: code, newPassword: newPassword),
-      options: CallOptions(timeout: const Duration(seconds: 10), metadata: {_skipAuth: 'true'}),
+      options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
   }
 
@@ -161,7 +155,7 @@ class GrpcAuthRepository implements AuthRepository {
     if (token == null || token.isEmpty) return false;
     final resp = await _client().refresh(
       authpb.RefreshRequest(refreshToken: token),
-      options: CallOptions(timeout: const Duration(seconds: 6), metadata: {_skipAuth: 'true'}),
+      options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
     if (resp.accessToken.isEmpty || resp.refreshToken.isEmpty) return false;
     await storage.writeTokens(

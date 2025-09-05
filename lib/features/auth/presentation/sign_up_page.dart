@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
-import 'package:peopleslab/core/l10n/l10n_helpers.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:peopleslab/features/auth/presentation/widgets/social_signin_buttons.dart';
 
 class SignUpPage extends ConsumerWidget {
   const SignUpPage({super.key});
@@ -13,8 +12,6 @@ class SignUpPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(authControllerProvider);
-    final notifier = ref.read(authControllerProvider.notifier);
-    final isIOS = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
     final s = context.l10n;
     return Scaffold(
       appBar: AppBar(title: Text(s.signup_title)),
@@ -26,33 +23,7 @@ class SignUpPage extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                OutlinedButton(
-                  onPressed: state.loading ? null : () async {
-                    final ok = await notifier.signInWithGoogle();
-                    if (!context.mounted) return;
-                    if (!ok) {
-                      final code = ref.read(authControllerProvider).errorMessage;
-                      final msg = localizeError(context, code);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-                    }
-                  },
-                  child: Text(s.signin_social_google),
-                ),
-                if (isIOS) ...[
-                  const SizedBox(height: 8),
-                  OutlinedButton(
-                    onPressed: state.loading ? null : () async {
-                      final ok = await notifier.signInWithApple();
-                      if (!context.mounted) return;
-                      if (!ok) {
-                        final code = ref.read(authControllerProvider).errorMessage;
-                        final msg = localizeError(context, code);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-                      }
-                    },
-                    child: Text(s.signin_social_apple),
-                  ),
-                ],
+                const SocialSignInButtons(),
                 const SizedBox(height: 8),
                 FilledButton(
                   onPressed: state.loading ? null : () => context.push(AppRoutes.emailSignUp),

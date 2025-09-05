@@ -224,15 +224,6 @@ class TokenStorage {
     });
   }
 
-  /// Alias per spec
-  Future<void> setTokens(String accessToken, String refreshToken, {int? accessExpiresIn, int? refreshExpiresIn}) =>
-      writeTokens(
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-        accessExpiresIn: accessExpiresIn,
-        refreshExpiresIn: refreshExpiresIn,
-      );
-
   Future<void> clearTokens() async {
     await _withWriteLock(() async {
       await _store.delete(key: _kAccess);
