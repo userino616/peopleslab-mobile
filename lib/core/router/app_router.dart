@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:peopleslab/core/router/nav.dart';
 import 'package:peopleslab/app/home_page.dart';
 import 'package:peopleslab/app/onboarding_page.dart';
 import 'package:peopleslab/app/welcome_page.dart';
@@ -48,7 +49,9 @@ class RouterNotifier extends ChangeNotifier {
   }
 
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {
-    final isLoggedIn = ref.read(authControllerProvider).user != null;
+    final user = ref.read(authControllerProvider).user;
+    final token = await ref.read(tokenStorageProvider).readRefreshToken();
+    final isLoggedIn = user != null && token != null && token.isNotEmpty;
     final loc = state.matchedLocation;
     final isSplash = loc == AppRoutes.splash;
 
@@ -89,6 +92,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: kDebugMode,
+    navigatorKey: rootNavigatorKey,
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [

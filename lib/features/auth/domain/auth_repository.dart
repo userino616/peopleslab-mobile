@@ -9,6 +9,8 @@ abstract class AuthRepository {
   Future<AuthUser> signIn({required String email, required String password});
   Future<AuthUser> signUp({required String email, required String password});
   Future<void> signOut();
+  // Refresh access token using refresh token. Returns true on success.
+  Future<bool> refresh();
 
   // Social sign-in
   Future<AuthUser> signInWithGoogle({required String idToken});
