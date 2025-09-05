@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:peopleslab/app/home_page.dart';
-import 'package:peopleslab/app/onboard_page.dart';
+import 'package:peopleslab/app/onboarding_page.dart';
 import 'package:peopleslab/app/welcome_page.dart';
 import 'package:peopleslab/features/auth/presentation/sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/forgot_password_page.dart';
@@ -24,7 +24,7 @@ class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
-        return MaterialPageRoute(builder: (_) => const OnboardPage());
+        return MaterialPageRoute(builder: (_) => const OnboardingPage());
       case AppRoutes.signIn:
         return MaterialPageRoute(builder: (_) => const SignInPage());
       case AppRoutes.welcome:
