@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/common/widgets/primary_button.dart';
 import 'package:peopleslab/core/utils/validators.dart';
+import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
@@ -30,6 +31,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final s = context.l10n;
     if (!_codeSent) {
       // Stage 1: request code
       final ok = await ref
@@ -39,10 +41,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       if (ok) {
         setState(() => _codeSent = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Код відправлено. Перевірте пошту.')),
+          SnackBar(content: Text(s.snack_code_sent)),
         );
       } else {
-        final err = ref.read(authControllerProvider).errorMessage ?? 'Помилка. Спробуйте ще раз.';
+        final err = ref.read(authControllerProvider).errorMessage ?? s.error_generic;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
       }
     } else {
@@ -51,11 +53,11 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       final code = _codeCtrl.text.trim();
       final pass = _passCtrl.text;
       if (code.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Введіть код з пошти')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.validation_code_required)));
         return;
       }
       if (_confirmCtrl.text != pass) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Паролі не співпадають')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.validation_passwords_not_match)));
         return;
       }
       final ok = await ref
@@ -64,11 +66,11 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       if (!mounted) return;
       if (ok) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Пароль оновлено. Тепер увійдіть.')),
+          SnackBar(content: Text(s.snack_password_updated)),
         );
         Navigator.of(context).pop();
       } else {
-        final err = ref.read(authControllerProvider).errorMessage ?? 'Не вдалося оновити пароль';
+        final err = ref.read(authControllerProvider).errorMessage ?? s.error_generic;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
       }
     }
@@ -77,8 +79,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
+    final s = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Відновлення доступу')),
+      appBar: AppBar(title: Text(s.forgot_title)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
@@ -89,15 +92,15 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Введіть email — надішлемо код для відновлення паролю. Після цього введіть код і новий пароль нижче.',
+                  Text(
+                    s.forgot_intro,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _emailCtrl,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: Validators.email,
+                    decoration: InputDecoration(labelText: s.label_email),
+                    validator: (v) => Validators.email(context, v),
                     keyboardType: TextInputType.emailAddress,
                     readOnly: _codeSent,
                   ),
@@ -105,11 +108,11 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _codeCtrl,
-                      decoration: const InputDecoration(labelText: 'Код з пошти'),
+                      decoration: InputDecoration(labelText: s.label_code_from_email),
                       validator: (v) => !_codeSent
                           ? null
                           : (v == null || v.trim().isEmpty)
-                              ? 'Код обовʼязковий'
+                              ? s.validation_code_required
                               : null,
                     ),
                     Align(
@@ -124,34 +127,34 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                 if (!context.mounted) return;
                                 if (ok) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Код повторно надіслано')),
+                                    SnackBar(content: Text(s.snack_code_resent)),
                                   );
                                 } else {
-                                  final err = ref.read(authControllerProvider).errorMessage ?? 'Помилка надсилання коду';
+                                  final err = ref.read(authControllerProvider).errorMessage ?? s.error_send_code;
                                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
                                 }
                               },
-                        child: const Text('Надіслати код ще раз'),
+                        child: Text(s.resend_code),
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _passCtrl,
-                      decoration: const InputDecoration(labelText: 'Новий пароль'),
+                      decoration: InputDecoration(labelText: s.label_password),
                       obscureText: true,
-                      validator: (v) => !_codeSent ? null : Validators.password(v),
+                      validator: (v) => !_codeSent ? null : Validators.password(context, v),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _confirmCtrl,
-                      decoration: const InputDecoration(labelText: 'Підтвердіть пароль'),
+                      decoration: InputDecoration(labelText: s.label_password_confirm),
                       obscureText: true,
-                      validator: (v) => !_codeSent ? null : Validators.password(v),
+                      validator: (v) => !_codeSent ? null : Validators.password(context, v),
                     ),
                   ],
                   const SizedBox(height: 16),
                   PrimaryButton(
-                    label: _codeSent ? 'Оновити пароль' : 'Надіслати код',
+                    label: _codeSent ? s.primary_update_password : s.primary_send_code,
                     loading: state.loading,
                     onPressed: _submit,
                   ),

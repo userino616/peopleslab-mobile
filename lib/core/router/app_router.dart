@@ -36,7 +36,7 @@ class RouterNotifier extends ChangeNotifier {
   bool _hasToken = false;
 
   RouterNotifier(this.ref) {
-    ref.listen<AuthState>(authControllerProvider, (_, __) => notifyListeners());
+    ref.listen<AuthState>(authControllerProvider, (_, _) => notifyListeners());
   }
 
   Future<void> _checkTokenOnce() async {

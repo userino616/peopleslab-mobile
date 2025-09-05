@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/common/widgets/primary_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
+import 'package:peopleslab/core/l10n/l10n_x.dart';
+import 'package:peopleslab/core/l10n/l10n_helpers.dart';
 import 'package:peopleslab/core/utils/validators.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 
@@ -34,17 +36,19 @@ class _EmailSignInPageState extends ConsumerState<EmailSignIn> {
     if (ok) {
       context.go(AppRoutes.home);
     } else {
-      final err = ref.read(authControllerProvider).errorMessage ?? 'Sign in failed';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+      final code = ref.read(authControllerProvider).errorMessage;
+      final msg = code == null ? context.l10n.error_signin_failed : localizeError(context, code);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
+    final s = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Email Sign In'),
+        title: Text(s.email_signin_title),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -58,16 +62,16 @@ class _EmailSignInPageState extends ConsumerState<EmailSignIn> {
                 children: [
                   TextFormField(
                     controller: _emailCtrl,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: Validators.email,
+                    decoration: InputDecoration(labelText: s.label_email),
+                    validator: (v) => Validators.email(context, v),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _passCtrl,
-                    decoration: const InputDecoration(labelText: 'Пароль'),
+                    decoration: InputDecoration(labelText: s.label_password),
                     obscureText: true,
-                    validator: Validators.password,
+                    validator: (v) => Validators.password(context, v),
                   ),
                   const SizedBox(height: 16),
                   Align(
@@ -76,12 +80,12 @@ class _EmailSignInPageState extends ConsumerState<EmailSignIn> {
                       onPressed: state.loading
                           ? null
                           : () => context.push(AppRoutes.forgotPassword),
-                      child: const Text('Забули пароль?'),
-                    ),
+                      child: Text(s.signin_forgot),
+                  ),
                   ),
                   const SizedBox(height: 8),
                   PrimaryButton(
-                    label: 'Увійти',
+                    label: s.primary_signin,
                     loading: state.loading,
                     onPressed: _submit,
                   ),

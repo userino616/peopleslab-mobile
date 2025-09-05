@@ -1,38 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
+import 'package:peopleslab/core/l10n/l10n_x.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final s = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome')),
+      appBar: AppBar(title: Text(s.onboarding_appbar_title)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'PeoplesLab',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              Text(
+                s.brand_name,
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Вітаємо! Розпочнімо знайомство.',
+              Text(
+                s.onboarding_intro,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () => context.go(AppRoutes.welcome),
-                child: const Text('Onboard'),
+                child: Text(s.onboarding_cta),
               ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: () => context.go(AppRoutes.signIn),
-                child: const Text('Already have an account? Sign in'),
+                child: Text.rich(TextSpan(children: [
+                  TextSpan(text: s.cta_already_have_account),
+                  TextSpan(text: s.action_sign_in),
+                ])),
               )
             ],
           ),

@@ -4,6 +4,8 @@ import 'package:peopleslab/common/widgets/primary_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/core/utils/validators.dart';
+import 'package:peopleslab/core/l10n/l10n_x.dart';
+import 'package:peopleslab/core/l10n/l10n_helpers.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 
 class EmailSignUpPage extends ConsumerStatefulWidget {
@@ -31,9 +33,10 @@ class _EmailSignUpPageState extends ConsumerState<EmailSignUpPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final s = context.l10n;
     if (_passCtrl.text != _confirmCtrl.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Паролі не співпадають')),
+        SnackBar(content: Text(s.validation_passwords_not_match)),
       );
       return;
     }
@@ -44,17 +47,19 @@ class _EmailSignUpPageState extends ConsumerState<EmailSignUpPage> {
     if (ok) {
       context.go(AppRoutes.home);
     } else {
-      final err = ref.read(authControllerProvider).errorMessage ?? 'Sign up failed';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+      final code = ref.read(authControllerProvider).errorMessage;
+      final msg = code == null ? s.error_signup_failed : localizeError(context, code);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
+    final s = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Email Sign Up'),
+        title: Text(s.email_signup_title),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -68,32 +73,32 @@ class _EmailSignUpPageState extends ConsumerState<EmailSignUpPage> {
                 children: [
                   TextFormField(
                     controller: _nameCtrl,
-                    decoration: const InputDecoration(labelText: 'Імʼя (опційно)'),
+                    decoration: InputDecoration(labelText: s.label_name_optional),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _emailCtrl,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: Validators.email,
+                    decoration: InputDecoration(labelText: s.label_email),
+                    validator: (v) => Validators.email(context, v),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _passCtrl,
-                    decoration: const InputDecoration(labelText: 'Пароль'),
+                    decoration: InputDecoration(labelText: s.label_password),
                     obscureText: true,
-                    validator: Validators.password,
+                    validator: (v) => Validators.password(context, v),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _confirmCtrl,
-                    decoration: const InputDecoration(labelText: 'Підтвердіть пароль'),
+                    decoration: InputDecoration(labelText: s.label_password_confirm),
                     obscureText: true,
-                    validator: Validators.password,
+                    validator: (v) => Validators.password(context, v),
                   ),
                   const SizedBox(height: 16),
                   PrimaryButton(
-                    label: 'Створити акаунт',
+                    label: s.primary_create_account,
                     loading: state.loading,
                     onPressed: _submit,
                   ),

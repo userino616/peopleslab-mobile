@@ -56,21 +56,25 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> signInWithGoogle() async {
     state = state.copyWith(loading: true, errorMessage: null);
     try {
-      final google = GoogleSignIn(scopes: const ['email']);
-      final acc = await google.signIn();
-      if (acc == null) {
-        state = state.copyWith(loading: false);
-        return false; // canceled
-      }
-      final auth = await acc.authentication;
-      final idToken = auth.idToken;
+      final google = GoogleSignIn.instance;
+      await google.initialize();
+      final acc = await google.authenticate(scopeHint: const ['email']);
+      final idToken = acc.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
-        state = state.copyWith(loading: false, errorMessage: 'Failed to obtain Google ID token');
+        state = state.copyWith(loading: false, errorMessage: 'auth.google_id_missing');
         return false;
       }
       final user = await _repo.signInWithGoogle(idToken: idToken);
       state = state.copyWith(loading: false, user: user);
       return true;
+    } on GoogleSignInException catch (e) {
+      // Treat user-cancel as non-error UI state
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        state = state.copyWith(loading: false);
+        return false;
+      }
+      state = state.copyWith(loading: false, errorMessage: e.toString());
+      return false;
     } catch (e) {
       state = state.copyWith(loading: false, errorMessage: e.toString());
       return false;
@@ -80,7 +84,7 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> signInWithApple() async {
     // Only meaningful on iOS/macOS
     if (kIsWeb || (defaultTargetPlatform != TargetPlatform.iOS && defaultTargetPlatform != TargetPlatform.macOS)) {
-      state = state.copyWith(errorMessage: 'Sign in with Apple not supported on this platform');
+      state = state.copyWith(errorMessage: 'auth.apple_unsupported');
       return false;
     }
     state = state.copyWith(loading: true, errorMessage: null);
@@ -90,7 +94,7 @@ class AuthController extends StateNotifier<AuthState> {
       );
       final idToken = credential.identityToken;
       if (idToken == null || idToken.isEmpty) {
-        state = state.copyWith(loading: false, errorMessage: 'Failed to obtain Apple ID token');
+        state = state.copyWith(loading: false, errorMessage: 'auth.apple_id_missing');
         return false;
       }
       final user = await _repo.signInWithApple(idToken: idToken);

@@ -1,4 +1,4 @@
-.PHONY: dump-lib
+.PHONY: dump-lib l10n-generate
 
 # Generate dump.txt with all files under lib/ (filename + contents)
 dump-lib:
@@ -11,3 +11,6 @@ dump-lib:
 	done
 	@echo "Wrote dump.txt"
 
+# Generate localization (S class) from ARB files
+l10n-generate:
+	flutter gen-l10n

@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatf
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
+import 'package:peopleslab/core/l10n/l10n_x.dart';
+import 'package:peopleslab/core/l10n/l10n_helpers.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 
 class SignUpPage extends ConsumerWidget {
@@ -13,8 +15,9 @@ class SignUpPage extends ConsumerWidget {
     final state = ref.watch(authControllerProvider);
     final notifier = ref.read(authControllerProvider.notifier);
     final isIOS = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final s = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
+      appBar: AppBar(title: Text(s.signup_title)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
@@ -30,13 +33,12 @@ class SignUpPage extends ConsumerWidget {
                     if (ok) {
                       context.go(AppRoutes.home);
                     } else {
-                      final err = ref.read(authControllerProvider).errorMessage;
-                      if (err != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
-                      }
+                      final code = ref.read(authControllerProvider).errorMessage;
+                      final msg = localizeError(context, code);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
                     }
                   },
-                  child: const Text('Sign in with Google'),
+                  child: Text(s.signin_social_google),
                 ),
                 if (isIOS) ...[
                   const SizedBox(height: 8),
@@ -47,24 +49,26 @@ class SignUpPage extends ConsumerWidget {
                       if (ok) {
                         context.go(AppRoutes.home);
                       } else {
-                        final err = ref.read(authControllerProvider).errorMessage;
-                        if (err != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
-                        }
+                        final code = ref.read(authControllerProvider).errorMessage;
+                        final msg = localizeError(context, code);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
                       }
                     },
-                    child: const Text('Sign in with Apple'),
+                    child: Text(s.signin_social_apple),
                   ),
                 ],
                 const SizedBox(height: 8),
                 FilledButton(
                   onPressed: state.loading ? null : () => context.push(AppRoutes.emailSignUp),
-                  child: const Text('Create an account'),
+                  child: Text(s.signup_create_account),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: state.loading ? null : () => context.go(AppRoutes.signIn),
-                  child: const Text('Already have an account? Sign in'),
+                  child: Text.rich(TextSpan(children: [
+                    TextSpan(text: s.cta_already_have_account),
+                    TextSpan(text: s.action_sign_in),
+                  ])),
                 ),
               ],
             ),

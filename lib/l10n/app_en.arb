@@ -1,0 +1,62 @@
+{
+  "appTitle": "PeoplesLab",
+
+  "home_title": "Home",
+  "home_logged_in": "You are logged in.",
+  "action_sign_out": "Sign out",
+
+  "onboarding_appbar_title": "Welcome",
+  "brand_name": "PeoplesLab",
+  "onboarding_intro": "Welcome! Let's get started.",
+  "onboarding_cta": "Get started",
+  "cta_already_have_account": "Already have an account?",
+  "action_sign_in": "Sign in",
+  "action_sign_up": "Sign up",
+
+  "welcome_appbar_title": "Welcome",
+  "welcome_intro": "A quick introduction to the app",
+
+  "signin_title": "Sign In",
+  "signin_email_button": "Sign in with e‑mail",
+  "signin_social_google": "Sign in with Google",
+  "signin_social_apple": "Sign in with Apple",
+  "signin_forgot": "Forgot your password?",
+
+  "signup_title": "Sign Up",
+  "signup_create_account": "Create an account",
+
+  "email_signin_title": "Email Sign In",
+  "email_signup_title": "Email Sign Up",
+
+  "label_email": "Email",
+  "label_password": "Password",
+  "label_password_confirm": "Confirm password",
+  "label_name_optional": "Name (optional)",
+  "label_code_from_email": "Code from email",
+
+  "primary_signin": "Sign in",
+  "primary_create_account": "Create account",
+  "primary_update_password": "Update password",
+  "primary_send_code": "Send code",
+
+  "forgot_title": "Password recovery",
+  "forgot_intro": "Enter your email — we will send a code. Then enter the code and a new password below.",
+  "resend_code": "Resend code",
+
+  "snack_code_sent": "Code sent. Check your email.",
+  "snack_code_resent": "Code resent.",
+  "snack_password_updated": "Password updated. Please sign in.",
+
+  "error_generic": "Something went wrong. Try again.",
+  "error_send_code": "Failed to send code.",
+  "error_signin_failed": "Sign in failed",
+  "error_signup_failed": "Sign up failed",
+
+  "validation_email_required": "Enter email",
+  "validation_email_invalid": "Invalid email",
+  "validation_password_required": "Enter password",
+  "validation_password_min": "Minimum 6 characters",
+  "validation_code_required": "Code is required",
+  "validation_passwords_not_match": "Passwords do not match"
+}
+
