@@ -28,12 +28,12 @@ class OnboardingPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: () => context.go(AppRoutes.signUp),
+                onPressed: () => context.push(AppRoutes.signUp),
                 child: Text(s.signup_create_account),
               ),
               const SizedBox(height: 12),
               TextButton(
-                onPressed: () => context.go(AppRoutes.signIn),
+                onPressed: () => context.push(AppRoutes.signIn),
                 child: Text.rich(TextSpan(children: [
                   TextSpan(text: s.cta_already_have_account),
                   TextSpan(text: s.action_sign_in),

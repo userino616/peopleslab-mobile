@@ -64,7 +64,7 @@ class SignUpPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: state.loading ? null : () => context.go(AppRoutes.signIn),
+                  onPressed: state.loading ? null : () => context.push(AppRoutes.signIn),
                   child: Text.rich(TextSpan(children: [
                     TextSpan(text: s.cta_already_have_account),
                     TextSpan(text: s.action_sign_in),
