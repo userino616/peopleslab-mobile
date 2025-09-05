@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:grpc/grpc_connection_interface.dart' show ClientChannelBase;
@@ -12,7 +13,11 @@ final grpcChannelProvider = Provider<ClientChannelBase>((ref) => GrpcClientFacto
 
 final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 
-final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage(ref.read(flutterSecureStorageProvider)));
+final tokenStorageProvider = Provider<TokenStorage>((ref) {
+  // On web, flutter_secure_storage uses localStorage under the hood. We cap TTL optionally.
+  final store = ref.read(flutterSecureStorageProvider);
+  return TokenStorage(store, webTtlCap: kIsWeb ? const Duration(hours: 12) : null);
+});
 
 final authInterceptorProvider = Provider<AuthInterceptor>((ref) {
   return AuthInterceptor(channel: ref.read(grpcChannelProvider), storage: ref.read(tokenStorageProvider));
