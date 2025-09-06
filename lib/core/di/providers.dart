@@ -57,37 +57,13 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return GrpcAuthRepository(getChannel, storage, getInterceptor, onResetGrpc: resetGrpc);
 });
 
-// ---- Auth status (single source of truth) ----
-
-/// Marker base class for auth status.
-abstract class AuthStatus {
-  const AuthStatus();
-}
-
-/// Unauthenticated state.
-class Unauthenticated extends AuthStatus {
-  const Unauthenticated();
-}
-
-/// Authenticated state with a user.
-class Authenticated extends AuthStatus {
-  final AuthUser user;
-  const Authenticated(this.user);
-}
-
-/// Computed provider for current auth status, based solely on:
-/// - `authController.user`
-/// - cached tokens from `TokenStorage.getTokens()`
-/// No direct token reads are performed elsewhere.
-final authStatusProvider = FutureProvider<AuthStatus>((ref) async {
-  // React to token changes too
-  ref.watch(tokensStreamProvider);
+/// Єдина «правда» про авторизацію: користувач є в стані + є refreshToken
+final isAuthenticatedProvider = Provider<bool>((ref) {
   final authState = ref.watch(authControllerProvider);
-  final tokens = await ref.read(tokenStorageProvider).getTokens();
-  final hasRefresh = (tokens?.refreshToken ?? '').isNotEmpty;
-  final user = authState.user;
-  if (user != null && hasRefresh) {
-    return Authenticated(user);
-  }
-  return const Unauthenticated();
+  final tokensAsync = ref.watch(tokensStreamProvider);
+  final hasRefresh = tokensAsync.maybeWhen(
+    data: (toks) => (toks?.refreshToken ?? '').isNotEmpty,
+    orElse: () => false,
+  );
+  return authState.user != null && hasRefresh;
 });

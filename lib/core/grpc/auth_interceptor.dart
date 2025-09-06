@@ -20,7 +20,10 @@ class AuthInterceptor extends ClientInterceptor {
   Completer<void>? _refreshing;
   bool _lastRefreshSucceeded = false;
 
-  void configure({required Future<bool> Function() refresh, required Future<void> Function() onAuthFailure}) {
+  void configure({
+    required Future<bool> Function() refresh,
+    required Future<void> Function() onAuthFailure,
+  }) {
     _refresh = refresh;
     _onAuthFailure = onAuthFailure;
   }
@@ -36,7 +39,6 @@ class AuthInterceptor extends ClientInterceptor {
   }
 
   Future<bool> _refreshGuarded() async {
-    // If no handler is configured, nothing we can do
     final refresh = _refresh;
     if (refresh == null) return false;
 
@@ -47,8 +49,10 @@ class AuthInterceptor extends ClientInterceptor {
 
     _refreshing = Completer<void>();
     try {
+      appLogger.i('auth_interceptor|refresh:start');
       final ok = await refresh();
       _lastRefreshSucceeded = ok;
+      appLogger.i('auth_interceptor|refresh:end ok=$ok');
       return ok;
     } catch (_) {
       _lastRefreshSucceeded = false;
@@ -62,7 +66,6 @@ class AuthInterceptor extends ClientInterceptor {
   void _handleAuthFailureAsync() {
     final onFail = _onAuthFailure;
     if (onFail != null) {
-      // Fire-and-forget: do not block the network path
       Future.microtask(() async {
         try {
           await onFail();
@@ -71,63 +74,66 @@ class AuthInterceptor extends ClientInterceptor {
     }
   }
 
-  // Unary with optional soft pre-refresh -> attach -> 401 refresh -> single retry
+  // Unary with optional soft pre-refresh -> attach -> single call
   @override
   ResponseFuture<R> interceptUnary<Q, R>(
-    ClientMethod<Q, R> method,
-    Q request,
-    CallOptions options,
-    ClientUnaryInvoker<Q, R> invoker,
-  ) {
+      ClientMethod<Q, R> method,
+      Q request,
+      CallOptions options,
+      ClientUnaryInvoker<Q, R> invoker,
+      ) {
     final skip = _shouldSkip(options);
+    final requestId = const Uuid().v4();
 
-    // Helper to build options with metadata injection and soft pre-refresh
-    CallOptions withHeaders({required String requestId, required int attempt}) {
-      FutureOr<void> provider(Map<String, String> md, String uri) async {
-        // Clean internal headers
-        md.remove(kSkipKey);
-        // Attach request id for traceability
-        if (!md.containsKey('x-request-id')) {
-          md['x-request-id'] = requestId;
-        }
-        // Attach attempt for observability (1 or 2)
-        md['x-request-attempt'] = attempt.toString();
-        // Soft pre-refresh: try once if token clearly missing/expired, but don't fail if it doesn't help
-        if (!skip) {
-          try {
-            final now = DateTime.now().millisecondsSinceEpoch;
-            final exp = await storage.readAccessExpiryMillis();
-            final access = await storage.readAccessToken();
-            final needsRefresh = (access == null || access.isEmpty) || (exp != null && exp <= now + 5000);
-            if (needsRefresh) {
-              appLogger.i('auth_interceptor|pre_refresh:start id=$requestId path=${method.path}');
-              final ok = await _refreshGuarded();
-              appLogger.i('auth_interceptor|pre_refresh:end ok=$ok id=$requestId');
-            }
-          } catch (e) {
-            appLogger.w('auth_interceptor|pre_refresh:end error=$e id=$requestId');
-          }
-        }
-        // Attach auth header if not skipped
-        await _attachAuthIfNeeded(md, skip);
-        final tag = skip ? 'attach skip' : 'attach';
-        appLogger.t('auth_interceptor|$tag id=$requestId attempt=$attempt path=${method.path}');
-      }
+    CallOptions withHeaders({required int attempt}) {
+      return options.mergedWith(
+        CallOptions(
+          providers: [
+                (md, _) async {
+              // Clean internal headers
+              md.remove(kSkipKey);
+              // Tracing
+              md['x-request-id'] = requestId;
+              md['x-request-attempt'] = attempt.toString();
 
-      return options.mergedWith(CallOptions(providers: [provider]));
+              // Soft pre-refresh: if token відсутній/прострочений — спробувати оновити
+              if (!skip) {
+                try {
+                  final now = DateTime.now().millisecondsSinceEpoch;
+                  final exp = await storage.readAccessExpiryMillis();
+                  final access = await storage.readAccessToken();
+                  final needsRefresh =
+                      (access == null || access.isEmpty) || (exp != null && exp <= now + 5000);
+                  if (needsRefresh) {
+                    appLogger.i('auth_interceptor|pre_refresh:start id=$requestId path=${method.path}');
+                    final ok = await _refreshGuarded();
+                    appLogger.i('auth_interceptor|pre_refresh:end ok=$ok id=$requestId');
+                  }
+                } catch (e) {
+                  appLogger.w('auth_interceptor|pre_refresh:error $e id=$requestId');
+                }
+              }
+
+              // Attach auth header (if any)
+              await _attachAuthIfNeeded(md, skip);
+              appLogger.t('auth_interceptor|attach id=$requestId attempt=$attempt path=${method.path}');
+            },
+          ],
+        ),
+      );
     }
 
-    final requestId = const Uuid().v4();
-    final call = invoker(method, request, withHeaders(requestId: requestId, attempt: 1));
-    // Side-effect: if 401 occurs, trigger async auth-failure handling
+    final call = invoker(method, request, withHeaders(attempt: 1));
+
+    // On 401: trigger async failure handler (logout/cleanup). No custom retry here.
     call.catchError((Object e, StackTrace st) {
       if (e is GrpcError && e.code == StatusCode.unauthenticated && !skip) {
         appLogger.w('auth_interceptor|401 id=$requestId attempt=1 path=${method.path}');
         _handleAuthFailureAsync();
       }
-      // Re-throw to avoid swallowing the error in this side-effect future
       throw e;
     });
+
     return call;
   }
 }

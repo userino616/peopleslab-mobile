@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,14 +7,12 @@ import 'package:peopleslab/app/home_page.dart';
 import 'package:peopleslab/app/onboarding_page.dart';
 import 'package:peopleslab/app/welcome_page.dart';
 import 'package:peopleslab/core/di/providers.dart';
-import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:peopleslab/features/auth/presentation/forgot_password_page.dart';
 import 'package:peopleslab/features/auth/presentation/sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/sign_up_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_up_page.dart';
 import 'package:peopleslab/core/logging/logger.dart';
-import 'package:peopleslab/core/auth/token_storage.dart';
 
 class AppRoutes {
   static const String welcome = '/welcome';
@@ -46,29 +42,26 @@ class RouterNotifier extends ChangeNotifier {
   final Ref ref;
 
   RouterNotifier(this.ref) {
-    ref.listen<AuthState>(authControllerProvider, (prev, next) => notifyListeners());
-    // Also refresh router when tokens change
-    ref.listen<AsyncValue<Tokens?>>(tokensStreamProvider, (prev, next) => notifyListeners());
+    // when auth flag changes — refresh router
+    ref.listen<bool>(isAuthenticatedProvider, (previous, next) {
+      if (previous == null || previous != next) {
+        notifyListeners();
+      }
+    });
   }
 
-  FutureOr<String?> redirect(BuildContext context, GoRouterState state) async {
+  String? redirect(BuildContext context, GoRouterState state) {
     final loc = state.matchedLocation;
-    final uri = state.uri.toString();
-    final status = await ref.read(authStatusProvider.future);
-    final statusStr = status is Authenticated ? 'authenticated' : 'unauthenticated';
-    appLogger.i('Router: redirect from uri="$uri" loc="$loc" status=$statusStr');
+    final isAuthed = ref.read(isAuthenticatedProvider);
+    final statusStr = isAuthed ? 'authenticated' : 'unauthenticated';
+    appLogger.i('Router: redirect loc="$loc" status=$statusStr');
 
-    if (status is Unauthenticated) {
-      if (!publicRoutes.contains(loc)) {
-        appLogger.i('Router: unauthenticated guard -> welcome');
-        return AppRoutes.welcome;
-      }
-      return null;
+    if (!isAuthed && !publicRoutes.contains(loc)) {
+      appLogger.i('Router: unauthenticated -> welcome');
+      return AppRoutes.welcome;
     }
-
-    // If authenticated and trying to access public pages, send home
-    if (publicRoutes.contains(loc)) {
-      appLogger.i('Router: public while authenticated -> home');
+    if (isAuthed && publicRoutes.contains(loc)) {
+      appLogger.i('Router: authenticated -> home');
       return AppRoutes.home;
     }
     return null;
@@ -78,45 +71,20 @@ class RouterNotifier extends ChangeNotifier {
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = RouterNotifier(ref);
   return GoRouter(
-    // Use a real route; deep links override this automatically.
     initialLocation: AppRoutes.welcome,
     debugLogDiagnostics: kDebugMode,
     navigatorKey: rootNavigatorKey,
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [
-      GoRoute(
-        path: AppRoutes.welcome,
-        builder: (context, state) => const WelcomePage(),
-      ),
-      GoRoute(
-        path: AppRoutes.onboarding,
-        builder: (context, state) => const OnboardingPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.signIn,
-        builder: (context, state) => const SignInPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.signUp,
-        builder: (context, state) => const SignUpPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.emailSignIn,
-        builder: (context, state) => const EmailSignIn(),
-      ),
-      GoRoute(
-        path: AppRoutes.emailSignUp,
-        builder: (context, state) => const EmailSignUpPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.forgotPassword,
-        builder: (context, state) => const ForgotPasswordPage(),
-      ),
-      GoRoute(
-        path: AppRoutes.home,
-        builder: (context, state) => const HomePage(),
-      ),
+      GoRoute(path: AppRoutes.welcome, builder: (context, state) => const WelcomePage()),
+      GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingPage()),
+      GoRoute(path: AppRoutes.signIn, builder: (context, state) => const SignInPage()),
+      GoRoute(path: AppRoutes.signUp, builder: (context, state) => const SignUpPage()),
+      GoRoute(path: AppRoutes.emailSignIn, builder: (context, state) => const EmailSignIn()),
+      GoRoute(path: AppRoutes.emailSignUp, builder: (context, state) => const EmailSignUpPage()),
+      GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordPage()),
+      GoRoute(path: AppRoutes.home, builder: (context, state) => const HomePage()),
     ],
   );
 });
