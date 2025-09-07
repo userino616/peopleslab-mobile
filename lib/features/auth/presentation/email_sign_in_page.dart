@@ -6,6 +6,7 @@ import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/core/l10n/l10n_helpers.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:peopleslab/features/auth/presentation/widgets/auth_email_password_form.dart';
+import 'package:peopleslab/common/widgets/app_button.dart';
 
 class EmailSignIn extends ConsumerStatefulWidget {
   const EmailSignIn({super.key});
@@ -23,11 +24,11 @@ class _EmailSignInPageState extends ConsumerState<EmailSignIn> {
       title: s.email_signin_title,
       primaryLabel: s.primary_signin,
       loading: state.loading,
-      middleSlot: TextButton(
+      middleSlot: AppButton.text(
         onPressed: state.loading
             ? null
             : () => context.push(AppRoutes.forgotPassword),
-        child: Text(s.signin_forgot),
+        label: s.signin_forgot,
       ),
       onSubmit: (email, password) async {
         final ok = await ref

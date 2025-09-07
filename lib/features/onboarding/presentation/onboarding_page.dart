@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
+import 'package:peopleslab/common/widgets/app_button.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
@@ -27,14 +28,14 @@ class OnboardingPage extends StatelessWidget {
               const SizedBox(height: 16),
               Text(s.onboarding_intro, textAlign: TextAlign.center),
               const SizedBox(height: 24),
-              FilledButton(
+              AppButton.primary(
                 onPressed: () => context.push(AppRoutes.signUp),
-                child: Text(s.signup_create_account),
+                label: s.signup_create_account,
               ),
               const SizedBox(height: 12),
-              TextButton(
+              AppButton.text(
                 onPressed: () => context.push(AppRoutes.signIn),
-                child: Text(s.cta_already_have_account),
+                label: s.cta_already_have_account,
               ),
             ],
           ),

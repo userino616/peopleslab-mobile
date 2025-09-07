@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/core/l10n/l10n_helpers.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:peopleslab/common/widgets/app_button.dart';
 
 class SocialSignInButtons extends ConsumerWidget {
   const SocialSignInButtons({super.key});
@@ -16,7 +17,7 @@ class SocialSignInButtons extends ConsumerWidget {
     final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
 
     final children = <Widget>[
-      OutlinedButton(
+      AppButton.outlined(
         onPressed: state.loading
             ? null
             : () async {
@@ -30,14 +31,14 @@ class SocialSignInButtons extends ConsumerWidget {
                   ).showSnackBar(SnackBar(content: Text(msg)));
                 }
               },
-        child: Text(context.l10n.signin_social_google),
+        label: context.l10n.signin_social_google,
       ),
     ];
 
     if (isIOS) {
       children.add(const SizedBox(height: 8));
       children.add(
-        OutlinedButton(
+        AppButton.outlined(
           onPressed: state.loading
               ? null
               : () async {
@@ -51,7 +52,7 @@ class SocialSignInButtons extends ConsumerWidget {
                     ).showSnackBar(SnackBar(content: Text(msg)));
                   }
                 },
-          child: Text(context.l10n.signin_social_apple),
+          label: context.l10n.signin_social_apple,
         ),
       );
     }

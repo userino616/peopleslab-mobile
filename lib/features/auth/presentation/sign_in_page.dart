@@ -5,6 +5,7 @@ import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:peopleslab/features/auth/presentation/widgets/social_signin_buttons.dart';
+import 'package:peopleslab/common/widgets/app_button.dart';
 
 class SignInPage extends ConsumerWidget {
   const SignInPage({super.key});
@@ -25,18 +26,18 @@ class SignInPage extends ConsumerWidget {
               children: [
                 const SocialSignInButtons(),
                 const SizedBox(height: 12),
-                OutlinedButton(
+                AppButton.outlined(
                   onPressed: state.loading
                       ? null
                       : () => context.push(AppRoutes.emailSignIn),
-                  child: Text(s.signin_email_button),
+                  label: s.signin_email_button,
                 ),
                 const SizedBox(height: 8),
-                TextButton(
+                AppButton.text(
                   onPressed: state.loading
                       ? null
                       : () => context.push(AppRoutes.forgotPassword),
-                  child: Text(s.signin_forgot),
+                  label: s.signin_forgot,
                 ),
               ],
             ),

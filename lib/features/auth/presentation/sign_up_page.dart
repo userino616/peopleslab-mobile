@@ -5,6 +5,7 @@ import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:peopleslab/features/auth/presentation/widgets/social_signin_buttons.dart';
+import 'package:peopleslab/common/widgets/app_button.dart';
 
 class SignUpPage extends ConsumerWidget {
   const SignUpPage({super.key});
@@ -25,18 +26,18 @@ class SignUpPage extends ConsumerWidget {
               children: [
                 const SocialSignInButtons(),
                 const SizedBox(height: 8),
-                FilledButton(
+                AppButton.primary(
                   onPressed: state.loading
                       ? null
                       : () => context.push(AppRoutes.emailSignUp),
-                  child: Text(s.signup_create_account),
+                  label: s.signup_create_account,
                 ),
                 const SizedBox(height: 8),
-                TextButton(
+                AppButton.text(
                   onPressed: state.loading
                       ? null
                       : () => context.push(AppRoutes.signIn),
-                  child: Text(s.cta_already_have_account),
+                  label: s.cta_already_have_account,
                 ),
               ],
             ),

@@ -63,7 +63,8 @@ final authHydratedProvider = Provider<bool>((ref) {
 final grpcInterceptorsProvider = Provider<List<ClientInterceptor>>((ref) {
   final storage = ref.read(tokenStorageProvider);
 
-  Future<bool> refresh(String rt) async {   // todo move from here
+  Future<bool> refresh(String rt) async {
+    // todo move from here
     final client = authpb.AuthServiceClient(ref.read(grpcChannelProvider));
     final resp = await client.refresh(
       authpb.RefreshRequest(refreshToken: rt),
@@ -95,8 +96,6 @@ final authServiceClientProvider = Provider<authpb.AuthServiceClient>((ref) {
   final interceptors = ref.watch(grpcInterceptorsProvider);
   return authpb.AuthServiceClient(channel, interceptors: interceptors);
 });
-
-// Removed grpcResetterProvider for simplicity
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return GrpcAuthRepository(ref.read(authServiceClientProvider));

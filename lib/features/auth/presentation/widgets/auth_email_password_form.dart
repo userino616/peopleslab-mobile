@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:peopleslab/common/widgets/primary_button.dart';
+import 'package:peopleslab/common/widgets/app_button.dart';
 import 'package:peopleslab/core/utils/validators.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 
@@ -82,7 +82,7 @@ class _AuthEmailPasswordFormState extends State<AuthEmailPasswordForm> {
                     ),
                     const SizedBox(height: 8),
                   ],
-                  PrimaryButton(
+                  AppButton.primary(
                     label: widget.primaryLabel,
                     loading: widget.loading,
                     onPressed: widget.loading ? null : _handleSubmit,

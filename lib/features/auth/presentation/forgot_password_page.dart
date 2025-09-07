@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:peopleslab/common/widgets/primary_button.dart';
+import 'package:peopleslab/common/widgets/app_button.dart';
 import 'package:peopleslab/core/utils/validators.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
@@ -126,7 +126,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     ),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: TextButton(
+                      child: AppButton.text(
                         onPressed: state.loading
                             ? null
                             : () async {
@@ -151,7 +151,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                   ).showSnackBar(SnackBar(content: Text(err)));
                                 }
                               },
-                        child: Text(s.resend_code),
+                        label: s.resend_code,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -174,7 +174,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  PrimaryButton(
+                  AppButton.primary(
                     label: _codeSent
                         ? s.primary_update_password
                         : s.primary_send_code,
