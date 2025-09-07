@@ -4,6 +4,9 @@ class AppSearchField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onFilterTap;
   final VoidCallback? onTap;
+  final TextEditingController? controller;
+  final FocusNode? focusNode;
+  final bool readOnly;
   final String hintText;
 
   const AppSearchField({
@@ -11,6 +14,9 @@ class AppSearchField extends StatelessWidget {
     this.onChanged,
     this.onFilterTap,
     this.onTap,
+    this.controller,
+    this.focusNode,
+    this.readOnly = false,
     this.hintText = 'Search supplements',
   });
 
@@ -23,8 +29,11 @@ class AppSearchField extends StatelessWidget {
       children: [
         Expanded(
           child: TextField(
+            controller: controller,
+            focusNode: focusNode,
             onChanged: onChanged,
             onTap: onTap,
+            readOnly: readOnly,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               hintText: hintText,

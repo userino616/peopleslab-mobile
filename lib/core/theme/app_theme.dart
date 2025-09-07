@@ -19,6 +19,22 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colorScheme.surface,
       textTheme: baseTextTheme,
+      navigationBarTheme: NavigationBarThemeData(
+        height: 56,
+        backgroundColor: colorScheme.surface,
+        indicatorColor: Colors.transparent,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+            size: selected ? 26 : 24,
+          );
+        }),
+        // No labels are shown; text styles are not needed
+      ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: ZoomPageTransitionsBuilder(),
@@ -141,6 +157,22 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colorScheme.surface,
       textTheme: baseTextTheme,
+      navigationBarTheme: NavigationBarThemeData(
+        height: 56,
+        backgroundColor: colorScheme.surface,
+        indicatorColor: Colors.transparent,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+            size: selected ? 26 : 24,
+          );
+        }),
+        // No labels are shown; text styles are not needed
+      ),
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: ZoomPageTransitionsBuilder(),
