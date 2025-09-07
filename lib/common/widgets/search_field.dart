@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 class AppSearchField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onFilterTap;
+  final VoidCallback? onTap;
   final String hintText;
 
   const AppSearchField({
     super.key,
     this.onChanged,
     this.onFilterTap,
+    this.onTap,
     this.hintText = 'Search supplements',
   });
 
@@ -22,6 +24,7 @@ class AppSearchField extends StatelessWidget {
         Expanded(
           child: TextField(
             onChanged: onChanged,
+            onTap: onTap,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               hintText: hintText,
@@ -29,19 +32,21 @@ class AppSearchField extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        Ink(
-          decoration: ShapeDecoration(
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+        if (onFilterTap != null) ...[
+          const SizedBox(width: 12),
+          Ink(
+            decoration: ShapeDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: IconButton(
+              onPressed: onFilterTap,
+              icon: const Icon(Icons.tune_rounded),
             ),
           ),
-          child: IconButton(
-            onPressed: onFilterTap,
-            icon: const Icon(Icons.tune_rounded),
-          ),
-        ),
+        ],
       ],
     );
   }

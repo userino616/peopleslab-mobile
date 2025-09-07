@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/common/widgets/search_field.dart';
+import 'package:peopleslab/app/bottom_nav.dart';
 import 'package:peopleslab/common/widgets/app_button.dart';
 
 class HomePage extends ConsumerWidget {
@@ -22,7 +23,7 @@ class HomePage extends ConsumerWidget {
       'Healthy',
     ];
     return Scaffold(
-      appBar: AppBar(title: Text(s.home_title)),
+      appBar: AppBar(),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -34,6 +35,10 @@ class HomePage extends ConsumerWidget {
                   AppSearchField(
                     hintText: 'Search restaurants or dishes',
                     onChanged: (_) {},
+                    onTap: () {
+                      // Open Search tab when tapping the search field
+                      ref.read(bottomNavIndexProvider.notifier).state = 1;
+                    },
                   ),
                   const SizedBox(height: 12),
                   SingleChildScrollView(

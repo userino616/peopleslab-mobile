@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/nav.dart';
-import 'package:peopleslab/features/home/presentation/home_page.dart';
+import 'package:peopleslab/app/main_shell.dart';
 import 'package:peopleslab/features/onboarding/presentation/onboarding_page.dart';
 import 'package:peopleslab/features/onboarding/presentation/welcome_page.dart';
 import 'package:peopleslab/core/di/providers.dart';
@@ -62,8 +62,9 @@ class RouterNotifier extends ChangeNotifier {
           ? AuthPhase.authenticated
           : AuthPhase.unauthenticated,
     );
-    final statusStr =
-        phase == AuthPhase.authenticated ? 'authenticated' : 'unauthenticated';
+    final statusStr = phase == AuthPhase.authenticated
+        ? 'authenticated'
+        : 'unauthenticated';
     appLogger.i('Router: redirect loc="$loc" status=$statusStr');
 
     // Hold at bootstrap until auth state is hydrated
@@ -137,7 +138,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.home,
-        builder: (context, state) => const HomePage(),
+        builder: (context, state) => const MainShell(),
       ),
     ],
   );
