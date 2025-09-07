@@ -1,62 +1,32 @@
 import 'package:grpc/grpc.dart';
-import 'package:grpc/grpc_connection_interface.dart' show ClientChannelBase;
 import 'package:peopleslab_api/auth/v1/service.pbgrpc.dart' as authpb;
-import 'package:peopleslab/core/auth/token_storage.dart';
 import 'package:peopleslab/core/grpc/auth_interceptor.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
-import 'package:peopleslab/core/logging/logger.dart';
 
 /// Placeholder implementation. Replace with real gRPC stubs after proto generation.
 class GrpcAuthRepository implements AuthRepository {
-  final ClientChannelBase Function() _getChannel;
-  final AuthInterceptor Function() _getInterceptor;
-  final TokenStorage storage;
-  final Future<void> Function() _onResetGrpc;
+  final authpb.AuthServiceClient Function() _getClient;
+  final Future<String> Function() _getDeviceId;
+  final String platform;
+  final String userAgent;
 
   GrpcAuthRepository(
-    this._getChannel,
-    this.storage,
-    this._getInterceptor, {
-    required Future<void> Function() onResetGrpc,
-  }) : _onResetGrpc = onResetGrpc;
+    this._getClient, {
+    required Future<String> Function() getDeviceId,
+    this.platform = 'flutter',
+    this.userAgent = 'peopleslab-app',
+  }) : _getDeviceId = getDeviceId;
 
-  authpb.AuthServiceClient _client() {
-    // Ensure interceptor is configured (new instance after invalidation needs hooks)
-    final interceptor = _getInterceptor();
-    interceptor.configure(
-      refresh: refresh,
-      onAuthFailure: () async {
-        // Best effort server-side logout, then clear local tokens and navigate
-        final token = await storage.readRefreshToken();
-        try {
-          if (token != null && token.isNotEmpty) {
-            await _client().logout(
-              authpb.LogoutRequest(refreshToken: token),
-              options: CallOptions(
-                metadata: {AuthInterceptor.kSkipKey: 'true'},
-              ),
-            );
-          }
-        } catch (_) {
-          // ignore
-        }
-        await storage.clearTokens();
-        await _onResetGrpc();
-        // No explicit navigation; Router redirect handles unauthenticated state.
-      },
-    );
-    return authpb.AuthServiceClient(_getChannel(), interceptors: [interceptor]);
-  }
+  authpb.AuthServiceClient _client() => _getClient();
 
-  // todo enrich with propel user device data and probably move to conts
   Future<authpb.Device> _device() async => authpb.Device(
-    deviceId: await storage.deviceId(),
-    platform: 'flutter',
-    userAgent: 'peopleslab-app',
+    deviceId: await _getDeviceId(),
+    platform: platform,
+    userAgent: userAgent,
   );
 
   @override
-  Future<AuthUser> signIn({
+  Future<AuthSession> signIn({
     required String email,
     required String password,
   }) async {
@@ -68,18 +38,22 @@ class GrpcAuthRepository implements AuthRepository {
       ),
       options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
-    await storage.writeTokens(
-      accessToken: resp.accessToken,
-      refreshToken: resp.refreshToken,
-      accessExpiresIn: resp.expiresIn,
-      refreshExpiresIn: resp.refreshExpiresIn,
-    );
     final user = resp.user;
-    return AuthUser(id: user.id, email: user.email);
+    return AuthSession(
+      user: AuthUser(id: user.id, email: user.email),
+      tokens: AuthTokens(
+        accessToken: resp.accessToken,
+        refreshToken: resp.refreshToken,
+        expiresIn: resp.expiresIn == 0 ? null : resp.expiresIn,
+        refreshExpiresIn: resp.refreshExpiresIn == 0
+            ? null
+            : resp.refreshExpiresIn,
+      ),
+    );
   }
 
   @override
-  Future<AuthUser> signUp({
+  Future<AuthSession> signUp({
     required String email,
     required String password,
   }) async {
@@ -91,28 +65,34 @@ class GrpcAuthRepository implements AuthRepository {
       ),
       options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
-    await storage.writeTokens(
-      accessToken: resp.accessToken,
-      refreshToken: resp.refreshToken,
-      accessExpiresIn: resp.expiresIn,
-      refreshExpiresIn: resp.refreshExpiresIn,
-    );
     final user = resp.user;
-    return AuthUser(id: user.id, email: user.email);
+    return AuthSession(
+      user: AuthUser(id: user.id, email: user.email),
+      tokens: AuthTokens(
+        accessToken: resp.accessToken,
+        refreshToken: resp.refreshToken,
+        expiresIn: resp.expiresIn == 0 ? null : resp.expiresIn,
+        refreshExpiresIn: resp.refreshExpiresIn == 0
+            ? null
+            : resp.refreshExpiresIn,
+      ),
+    );
   }
 
   @override
-  Future<void> signOut() async {
-    final token = await storage.readRefreshToken();
-    if (token == null || token.isEmpty) return;
-    appLogger.i('Logout: closing channel and resetting DI');
-    await _client().logout(authpb.LogoutRequest(refreshToken: token));
-    await storage.clearTokens();
-    await _onResetGrpc();
+  Future<void> signOut({required String refreshToken}) async {
+    try {
+      await _client().logout(
+        authpb.LogoutRequest(refreshToken: refreshToken),
+        options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
+      );
+    } catch (_) {
+      /* best effort */
+    }
   }
 
   @override
-  Future<AuthUser> signInWithGoogle({required String idToken}) async {
+  Future<AuthSession> signInWithGoogle({required String idToken}) async {
     final resp = await _client().socialSignIn(
       authpb.SocialSignInRequest(
         provider: authpb.Provider.PROVIDER_GOOGLE,
@@ -121,18 +101,22 @@ class GrpcAuthRepository implements AuthRepository {
       ),
       options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
-    await storage.writeTokens(
-      accessToken: resp.accessToken,
-      refreshToken: resp.refreshToken,
-      accessExpiresIn: resp.expiresIn,
-      refreshExpiresIn: resp.refreshExpiresIn,
-    );
     final user = resp.user;
-    return AuthUser(id: user.id, email: user.email);
+    return AuthSession(
+      user: AuthUser(id: user.id, email: user.email),
+      tokens: AuthTokens(
+        accessToken: resp.accessToken,
+        refreshToken: resp.refreshToken,
+        expiresIn: resp.expiresIn == 0 ? null : resp.expiresIn,
+        refreshExpiresIn: resp.refreshExpiresIn == 0
+            ? null
+            : resp.refreshExpiresIn,
+      ),
+    );
   }
 
   @override
-  Future<AuthUser> signInWithApple({required String idToken}) async {
+  Future<AuthSession> signInWithApple({required String idToken}) async {
     final resp = await _client().socialSignIn(
       authpb.SocialSignInRequest(
         provider: authpb.Provider.PROVIDER_APPLE,
@@ -141,14 +125,18 @@ class GrpcAuthRepository implements AuthRepository {
       ),
       options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
-    await storage.writeTokens(
-      accessToken: resp.accessToken,
-      refreshToken: resp.refreshToken,
-      accessExpiresIn: resp.expiresIn,
-      refreshExpiresIn: resp.refreshExpiresIn,
-    );
     final user = resp.user;
-    return AuthUser(id: user.id, email: user.email);
+    return AuthSession(
+      user: AuthUser(id: user.id, email: user.email),
+      tokens: AuthTokens(
+        accessToken: resp.accessToken,
+        refreshToken: resp.refreshToken,
+        expiresIn: resp.expiresIn == 0 ? null : resp.expiresIn,
+        refreshExpiresIn: resp.refreshExpiresIn == 0
+            ? null
+            : resp.refreshExpiresIn,
+      ),
+    );
   }
 
   @override
@@ -184,19 +172,16 @@ class GrpcAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<bool> refresh() async {
-    final token = await storage.readRefreshToken();
-    if (token == null || token.isEmpty) return false;
+  Future<AuthTokens?> refresh({required String refreshToken}) async {
     final resp = await _client().refresh(
-      authpb.RefreshRequest(refreshToken: token),
+      authpb.RefreshRequest(refreshToken: refreshToken),
       options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
-    if (resp.accessToken.isEmpty || resp.refreshToken.isEmpty) return false;
-    await storage.writeTokens(
+    if (resp.accessToken.isEmpty || resp.refreshToken.isEmpty) return null;
+    return AuthTokens(
       accessToken: resp.accessToken,
       refreshToken: resp.refreshToken,
-      accessExpiresIn: resp.expiresIn,
+      expiresIn: resp.expiresIn == 0 ? null : resp.expiresIn,
     );
-    return true;
   }
 }

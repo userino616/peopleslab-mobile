@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/core/di/providers.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
+import 'package:peopleslab/core/auth/auth_manager.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -23,7 +24,8 @@ class AuthState {
 
 class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _repo;
-  AuthController(this._repo) : super(const AuthState());
+  final AuthManager _auth;
+  AuthController(this._repo, this._auth) : super(const AuthState());
 
   /// Tries to load current user using existing session
   Future<void> loadCurrentUser() async {
@@ -40,8 +42,9 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> signIn(String email, String password) async {
     state = state.copyWith(loading: true, errorMessage: null);
     try {
-      final user = await _repo.signIn(email: email, password: password);
-      state = state.copyWith(loading: false, user: user);
+      final session = await _repo.signIn(email: email, password: password);
+      await _auth.applySessionTokens(session.tokens);
+      state = state.copyWith(loading: false, user: session.user);
       return true;
     } catch (e) {
       state = state.copyWith(loading: false, errorMessage: e.toString());
@@ -52,8 +55,9 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> signUp(String email, String password) async {
     state = state.copyWith(loading: true, errorMessage: null);
     try {
-      final user = await _repo.signUp(email: email, password: password);
-      state = state.copyWith(loading: false, user: user);
+      final session = await _repo.signUp(email: email, password: password);
+      await _auth.applySessionTokens(session.tokens);
+      state = state.copyWith(loading: false, user: session.user);
       return true;
     } catch (e) {
       state = state.copyWith(loading: false, errorMessage: e.toString());
@@ -62,7 +66,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
-    await _repo.signOut();
+    await _auth.signOut();
     state = const AuthState();
   }
 
@@ -80,8 +84,9 @@ class AuthController extends StateNotifier<AuthState> {
         );
         return false;
       }
-      final user = await _repo.signInWithGoogle(idToken: idToken);
-      state = state.copyWith(loading: false, user: user);
+      final session = await _repo.signInWithGoogle(idToken: idToken);
+      await _auth.applySessionTokens(session.tokens);
+      state = state.copyWith(loading: false, user: session.user);
       return true;
     } on GoogleSignInException catch (e) {
       // Treat user-cancel as non-error UI state
@@ -120,8 +125,9 @@ class AuthController extends StateNotifier<AuthState> {
         );
         return false;
       }
-      final user = await _repo.signInWithApple(idToken: idToken);
-      state = state.copyWith(loading: false, user: user);
+      final session = await _repo.signInWithApple(idToken: idToken);
+      await _auth.applySessionTokens(session.tokens);
+      state = state.copyWith(loading: false, user: session.user);
       return true;
     } catch (e) {
       state = state.copyWith(loading: false, errorMessage: e.toString());
@@ -165,15 +171,11 @@ class AuthController extends StateNotifier<AuthState> {
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
   (ref) {
     final repo = ref.read(authRepositoryProvider);
-    final c = AuthController(repo);
-    // On startup: if we have a refresh token, try to load the user profile
-    final storage = ref.read(tokenStorageProvider);
+    final auth = ref.read(authManagerProvider);
+    final c = AuthController(repo, auth);
+    // On startup: attempt to load current user; interceptor handles 401/refresh
     Future.microtask(() async {
-      final tokens = await storage.getTokens();
-      final hasRefresh = (tokens?.refreshToken ?? '').isNotEmpty;
-      if (hasRefresh) {
-        await c.loadCurrentUser();
-      }
+      await c.loadCurrentUser();
     });
     return c;
   },

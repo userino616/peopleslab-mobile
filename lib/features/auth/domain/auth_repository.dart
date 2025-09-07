@@ -5,19 +5,40 @@ class AuthUser {
   const AuthUser({required this.id, required this.email});
 }
 
+class AuthTokens {
+  final String accessToken;
+  final String refreshToken;
+  final int? expiresIn; // seconds until access token expiry
+  final int? refreshExpiresIn; // seconds until refresh token expiry
+
+  const AuthTokens({
+    required this.accessToken,
+    required this.refreshToken,
+    this.expiresIn,
+    this.refreshExpiresIn,
+  });
+}
+
+class AuthSession {
+  final AuthUser user;
+  final AuthTokens tokens;
+  const AuthSession({required this.user, required this.tokens});
+}
+
 abstract class AuthRepository {
-  Future<AuthUser> signIn({required String email, required String password});
-  Future<AuthUser> signUp({required String email, required String password});
-  Future<void> signOut();
-  // Refresh access token using refresh token. Returns true on success.
-  Future<bool> refresh();
+  Future<AuthSession> signIn({required String email, required String password});
+  Future<AuthSession> signUp({required String email, required String password});
+  // Network logout; does not clear local storage.
+  Future<void> signOut({required String refreshToken});
+  // Refresh access token; returns new tokens or null on failure.
+  Future<AuthTokens?> refresh({required String refreshToken});
 
   // Load current user profile using existing session; returns null if unauthenticated.
   Future<AuthUser?> getMe();
 
   // Social sign-in
-  Future<AuthUser> signInWithGoogle({required String idToken});
-  Future<AuthUser> signInWithApple({required String idToken});
+  Future<AuthSession> signInWithGoogle({required String idToken});
+  Future<AuthSession> signInWithApple({required String idToken});
 
   // Password reset
   Future<void> forgotPassword({required String email});
