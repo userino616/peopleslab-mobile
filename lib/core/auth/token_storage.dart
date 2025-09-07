@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 import 'package:peopleslab/core/logging/logger.dart';
@@ -63,12 +62,8 @@ class TokenStorage {
 
   final TokenStoreBackend _store;
 
-  /// Optional cap for token TTL on web. If provided and running on web,
-  /// the stored expiry will be min(server expiry, now + this cap).
-  final Duration? webTtlCap;
-
-  TokenStorage(FlutterSecureStorage storage, {this.webTtlCap}) : _store = _FSSStore(storage);
-  TokenStorage.withStore(this._store, {this.webTtlCap});
+  TokenStorage(FlutterSecureStorage storage) : _store = _FSSStore(storage);
+  TokenStorage.withStore(this._store);
 
   // In-memory cache to minimize IO
   Tokens? _cache;
@@ -166,12 +161,7 @@ class TokenStorage {
       int? accessExpMs = accessExpiresIn == null ? null : now + accessExpiresIn * 1000;
       int? refreshExpMs = refreshExpiresIn == null ? prev?.refreshExpiryMillis : now + refreshExpiresIn * 1000;
 
-      // Apply web TTL cap if configured
-      if (kIsWeb && webTtlCap != null) {
-        final capMs = now + webTtlCap!.inMilliseconds;
-        if (accessExpMs != null) accessExpMs = accessExpMs > capMs ? capMs : accessExpMs;
-        if (refreshExpMs != null) refreshExpMs = refreshExpMs > capMs ? capMs : refreshExpMs;
-      }
+      // No platform-specific TTL capping
 
       // Perform writes with rollback on error
       try {
@@ -236,8 +226,6 @@ class TokenStorage {
       _tokensController.add(_cache);
     });
   }
-
-  // Note: prefer using clearTokens() explicitly to keep API precise.
 
   // ----- Utilities -----
   /// Returns true if access token is considered expired using a skew window.

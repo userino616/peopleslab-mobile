@@ -12,6 +12,9 @@ abstract class AuthRepository {
   // Refresh access token using refresh token. Returns true on success.
   Future<bool> refresh();
 
+  // Load current user profile using existing session; returns null if unauthenticated.
+  Future<AuthUser?> getMe();
+
   // Social sign-in
   Future<AuthUser> signInWithGoogle({required String idToken});
   Future<AuthUser> signInWithApple({required String idToken});

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/core/di/providers.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
@@ -23,6 +23,18 @@ class AuthState {
 class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _repo;
   AuthController(this._repo) : super(const AuthState());
+
+  /// Tries to load current user using existing session
+  Future<void> loadCurrentUser() async {
+    try {
+      final me = await _repo.getMe();
+      if (me != null) {
+        state = state.copyWith(user: me);
+      }
+    } catch (_) {
+      // Unauthenticated or transient errors are handled by interceptor; ignore here
+    }
+  }
 
   Future<bool> signIn(String email, String password) async {
     state = state.copyWith(loading: true, errorMessage: null);
@@ -83,7 +95,7 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<bool> signInWithApple() async {
     // Only meaningful on iOS/macOS
-    if (kIsWeb || (defaultTargetPlatform != TargetPlatform.iOS && defaultTargetPlatform != TargetPlatform.macOS)) {
+    if (defaultTargetPlatform != TargetPlatform.iOS && defaultTargetPlatform != TargetPlatform.macOS) {
       state = state.copyWith(errorMessage: 'auth.apple_unsupported');
       return false;
     }
@@ -133,5 +145,15 @@ class AuthController extends StateNotifier<AuthState> {
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>((ref) {
   final repo = ref.read(authRepositoryProvider);
-  return AuthController(repo);
+  final c = AuthController(repo);
+  // On startup: if we have a refresh token, try to load the user profile
+  final storage = ref.read(tokenStorageProvider);
+  Future.microtask(() async {
+    final tokens = await storage.getTokens();
+    final hasRefresh = (tokens?.refreshToken ?? '').isNotEmpty;
+    if (hasRefresh) {
+      await c.loadCurrentUser();
+    }
+  });
+  return c;
 });

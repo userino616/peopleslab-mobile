@@ -13,8 +13,12 @@ class GrpcAuthRepository implements AuthRepository {
   final TokenStorage storage;
   final Future<void> Function() _onResetGrpc;
 
-  GrpcAuthRepository(this._getChannel, this.storage, this._getInterceptor, {required Future<void> Function() onResetGrpc})
-      : _onResetGrpc = onResetGrpc;
+  GrpcAuthRepository(
+    this._getChannel,
+    this.storage,
+    this._getInterceptor, {
+    required Future<void> Function() onResetGrpc,
+  }) : _onResetGrpc = onResetGrpc;
 
   authpb.AuthServiceClient _client() {
     // Ensure interceptor is configured (new instance after invalidation needs hooks)
@@ -28,7 +32,9 @@ class GrpcAuthRepository implements AuthRepository {
           if (token != null && token.isNotEmpty) {
             await _client().logout(
               authpb.LogoutRequest(refreshToken: token),
-              options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
+              options: CallOptions(
+                metadata: {AuthInterceptor.kSkipKey: 'true'},
+              ),
             );
           }
         } catch (_) {
@@ -44,15 +50,22 @@ class GrpcAuthRepository implements AuthRepository {
 
   // todo enrich with propel user device data and probably move to conts
   Future<authpb.Device> _device() async => authpb.Device(
-        deviceId: await storage.deviceId(),
-        platform: 'flutter',
-        userAgent: 'peopleslab-app',
-      );
+    deviceId: await storage.deviceId(),
+    platform: 'flutter',
+    userAgent: 'peopleslab-app',
+  );
 
   @override
-  Future<AuthUser> signIn({required String email, required String password}) async {
+  Future<AuthUser> signIn({
+    required String email,
+    required String password,
+  }) async {
     final resp = await _client().emailSignIn(
-      authpb.EmailSignInRequest(email: email, password: password, device: await _device()),
+      authpb.EmailSignInRequest(
+        email: email,
+        password: password,
+        device: await _device(),
+      ),
       options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
     await storage.writeTokens(
@@ -66,9 +79,16 @@ class GrpcAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AuthUser> signUp({required String email, required String password}) async {
+  Future<AuthUser> signUp({
+    required String email,
+    required String password,
+  }) async {
     final resp = await _client().emailSignUp(
-      authpb.EmailSignUpRequest(email: email, password: password, device: await _device()),
+      authpb.EmailSignUpRequest(
+        email: email,
+        password: password,
+        device: await _device(),
+      ),
       options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
     await storage.writeTokens(
@@ -86,9 +106,7 @@ class GrpcAuthRepository implements AuthRepository {
     final token = await storage.readRefreshToken();
     if (token == null || token.isEmpty) return;
     appLogger.i('Logout: closing channel and resetting DI');
-    await _client().logout(
-      authpb.LogoutRequest(refreshToken: token),
-    );
+    await _client().logout(authpb.LogoutRequest(refreshToken: token));
     await storage.clearTokens();
     await _onResetGrpc();
   }
@@ -142,11 +160,27 @@ class GrpcAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> resetPassword({required String email, required String code, required String newPassword}) async {
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
     await _client().resetPassword(
-      authpb.ResetPasswordRequest(email: email, code: code, newPassword: newPassword),
+      authpb.ResetPasswordRequest(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      ),
       options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
     );
+  }
+
+  @override
+  Future<AuthUser?> getMe() async {
+    // Authorized call (no skip): interceptor attaches auth and pre-refreshes if needed
+    final resp = await _client().getMe(authpb.GetMeRequest());
+    final user = resp.user;
+    return AuthUser(id: user.id, email: user.email);
   }
 
   @override

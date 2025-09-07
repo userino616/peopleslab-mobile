@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/core/l10n/l10n_helpers.dart';
@@ -12,7 +12,7 @@ class SocialSignInButtons extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(authControllerProvider);
     final notifier = ref.read(authControllerProvider.notifier);
-    final isIOS = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
 
     final children = <Widget>[
       OutlinedButton(
@@ -54,4 +54,3 @@ class SocialSignInButtons extends ConsumerWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children);
   }
 }
-
