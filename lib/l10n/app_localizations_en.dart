@@ -102,8 +102,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgot_title => 'Password recovery';
 
   @override
-  String get forgot_intro =>
-      'Enter your email — we will send a code. Then enter the code and a new password below.';
+  String get forgot_intro => 'Enter your email — we will send a code. Then enter the code and a new password below.';
 
   @override
   String get resend_code => 'Resend code';

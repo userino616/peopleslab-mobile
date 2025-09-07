@@ -14,6 +14,7 @@ import 'package:peopleslab/features/auth/presentation/email_sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_up_page.dart';
 import 'package:peopleslab/core/logging/logger.dart';
 import 'package:peopleslab/core/router/bootstrap_page.dart';
+import 'package:peopleslab/core/auth/auth_phase.dart';
 
 class AppRoutes {
   static const String bootstrap = '/bootstrap';
@@ -45,23 +46,28 @@ class RouterNotifier extends ChangeNotifier {
   final Ref ref;
 
   RouterNotifier(this.ref) {
-    // when auth flag changes — refresh router
-    ref.listen<bool>(isAuthenticatedProvider, (previous, next) {
-      if (previous == null || previous != next) {
-        notifyListeners();
-      }
+    // Refresh router when tokens stream changes (loading/data/error)
+    ref.listen(tokensStreamProvider, (previous, next) {
+      notifyListeners();
     });
   }
 
   String? redirect(BuildContext context, GoRouterState state) {
     final loc = state.matchedLocation;
-    final hydrated = ref.read(authHydratedProvider);
-    final isAuthed = ref.read(isAuthenticatedProvider);
-    final statusStr = isAuthed ? 'authenticated' : 'unauthenticated';
+    final tokensAsync = ref.read(tokensStreamProvider);
+    final phase = tokensAsync.when(
+      loading: () => AuthPhase.loading,
+      error: (err, stack) => AuthPhase.unauthenticated,
+      data: (t) => (t?.refreshToken ?? '').isNotEmpty
+          ? AuthPhase.authenticated
+          : AuthPhase.unauthenticated,
+    );
+    final statusStr =
+        phase == AuthPhase.authenticated ? 'authenticated' : 'unauthenticated';
     appLogger.i('Router: redirect loc="$loc" status=$statusStr');
 
     // Hold at bootstrap until auth state is hydrated
-    if (!hydrated) {
+    if (phase == AuthPhase.loading) {
       if (loc != AppRoutes.bootstrap) {
         appLogger.i('Router: -> bootstrap (waiting hydration)');
         return AppRoutes.bootstrap;
@@ -71,14 +77,16 @@ class RouterNotifier extends ChangeNotifier {
 
     // After hydration, leave bootstrap to the right destination
     if (loc == AppRoutes.bootstrap) {
-      return isAuthed ? AppRoutes.home : AppRoutes.welcome;
+      return phase == AuthPhase.authenticated
+          ? AppRoutes.home
+          : AppRoutes.welcome;
     }
 
-    if (!isAuthed && !publicRoutes.contains(loc)) {
+    if (phase != AuthPhase.authenticated && !publicRoutes.contains(loc)) {
       appLogger.i('Router: unauthenticated -> welcome');
       return AppRoutes.welcome;
     }
-    if (isAuthed && publicRoutes.contains(loc)) {
+    if (phase == AuthPhase.authenticated && publicRoutes.contains(loc)) {
       appLogger.i('Router: authenticated -> home');
       return AppRoutes.home;
     }

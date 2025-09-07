@@ -47,18 +47,6 @@ final tokensStreamProvider = StreamProvider<Tokens?>((ref) {
   return storage.tokensStream;
 });
 
-/// True once the initial tokens snapshot has been loaded/emitted
-final authHydratedProvider = Provider<bool>((ref) {
-  final tokensAsync = ref.watch(tokensStreamProvider);
-  return tokensAsync.when(
-    data: (_) => true,
-    loading: () => false,
-    error: (_, _) => true, // proceed even if errored
-  );
-});
-
-// No AuthManager provider
-
 /// Central list of gRPC interceptors used by all clients
 final grpcInterceptorsProvider = Provider<List<ClientInterceptor>>((ref) {
   final storage = ref.read(tokenStorageProvider);
@@ -99,12 +87,4 @@ final authServiceClientProvider = Provider<authpb.AuthServiceClient>((ref) {
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return GrpcAuthRepository(ref.read(authServiceClientProvider));
-});
-
-final isAuthenticatedProvider = Provider<bool>((ref) {
-  final tokensAsync = ref.watch(tokensStreamProvider);
-  return tokensAsync.maybeWhen(
-    data: (tokens) => (tokens?.refreshToken ?? '').isNotEmpty,
-    orElse: () => false,
-  );
 });

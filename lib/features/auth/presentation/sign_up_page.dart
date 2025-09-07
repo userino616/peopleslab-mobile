@@ -26,7 +26,7 @@ class SignUpPage extends ConsumerWidget {
               children: [
                 const SocialSignInButtons(),
                 const SizedBox(height: 8),
-                AppButton.primary(
+                AppButton.outlined(
                   onPressed: state.loading
                       ? null
                       : () => context.push(AppRoutes.emailSignUp),
