@@ -4,14 +4,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:grpc/grpc_connection_interface.dart' show ClientChannelBase;
 import 'package:grpc/grpc.dart' show ClientInterceptor;
 import 'package:peopleslab/core/auth/token_storage.dart';
+import 'package:peopleslab/core/auth/user_storage.dart';
 import 'package:peopleslab/core/grpc/auth_interceptor.dart';
 import 'package:peopleslab/core/grpc/logging_interceptor.dart';
-import 'package:peopleslab/core/auth/auth_manager.dart';
 import 'package:peopleslab/core/grpc/grpc_channel.dart';
-import 'package:peopleslab/features/auth/data/grpc_auth_repository.dart';
-import 'package:peopleslab/features/auth/domain/auth_repository.dart';
-import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:peopleslab/features/auth/data/grpc/grpc_auth_repository.dart';
+import 'package:peopleslab/features/auth/data/auth_repository.dart';
 import 'package:peopleslab_api/auth/v1/service.pbgrpc.dart' as authpb;
+import 'package:grpc/grpc.dart' show CallOptions;
 
 // gRPC channel provider
 final grpcChannelProvider = Provider<ClientChannelBase>((ref) {
@@ -31,28 +31,62 @@ final grpcChannelProvider = Provider<ClientChannelBase>((ref) {
   return channel;
 });
 
-// Keep TokenStorage internal to this library
-final _tokenStorageProvider = Provider<TokenStorage>(
+// Token storage provider
+final tokenStorageProvider = Provider<TokenStorage>(
   (ref) => TokenStorage(const FlutterSecureStorage()),
+);
+
+// User storage provider
+final userStorageProvider = Provider<UserStorage>(
+  (ref) => UserStorage(const FlutterSecureStorage()),
 );
 
 /// Reactive stream of token changes emitted by TokenStorage.
 final tokensStreamProvider = StreamProvider<Tokens?>((ref) {
-  final storage = ref.read(_tokenStorageProvider);
+  final storage = ref.read(tokenStorageProvider);
   return storage.tokensStream;
 });
 
-final authManagerProvider = Provider<AuthManager>((ref) {
-  final storage = ref.read(_tokenStorageProvider);
-  final manager = AuthManager(storage: storage);
-  ref.onDispose(manager.dispose);
-  return manager;
+/// True once the initial tokens snapshot has been loaded/emitted
+final authHydratedProvider = Provider<bool>((ref) {
+  final tokensAsync = ref.watch(tokensStreamProvider);
+  return tokensAsync.when(
+    data: (_) => true,
+    loading: () => false,
+    error: (_, _) => true, // proceed even if errored
+  );
 });
+
+// No AuthManager provider
 
 /// Central list of gRPC interceptors used by all clients
 final grpcInterceptorsProvider = Provider<List<ClientInterceptor>>((ref) {
-  final authManager = ref.read(authManagerProvider);
-  return [LoggingInterceptor(), AuthInterceptor(authManager: authManager)];
+  final storage = ref.read(tokenStorageProvider);
+
+  Future<bool> refresh(String rt) async {   // todo move from here
+    final client = authpb.AuthServiceClient(ref.read(grpcChannelProvider));
+    final resp = await client.refresh(
+      authpb.RefreshRequest(refreshToken: rt),
+      options: CallOptions(metadata: {AuthInterceptor.kSkipKey: 'true'}),
+    );
+    if (resp.accessToken.isEmpty || resp.refreshToken.isEmpty) return false;
+    await storage.writeTokens(
+      accessToken: resp.accessToken,
+      refreshToken: resp.refreshToken,
+      accessExpiresIn: resp.expiresIn == 0 ? null : resp.expiresIn,
+      refreshExpiresIn: null,
+    );
+    return true;
+  }
+
+  return [
+    LoggingInterceptor(),
+    AuthInterceptor(
+      storage: storage,
+      refresh: refresh,
+      userStorage: ref.read(userStorageProvider),
+    ),
+  ];
 });
 
 /// Per-service client provider example: AuthServiceClient
@@ -62,42 +96,16 @@ final authServiceClientProvider = Provider<authpb.AuthServiceClient>((ref) {
   return authpb.AuthServiceClient(channel, interceptors: interceptors);
 });
 
-/// Centralized gRPC reset function
-final grpcResetterProvider = Provider<Future<void> Function()>((ref) {
-  return () async {
-    appLogger.i('Resetting gRPC: invalidating channel');
-    ref.invalidate(grpcChannelProvider);
-  };
-});
+// Removed grpcResetterProvider for simplicity
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final storage = ref.read(_tokenStorageProvider);
-
-  final repo = GrpcAuthRepository(
-    () => ref.read(authServiceClientProvider),
-    getDeviceId: () => ref.read(_tokenStorageProvider).deviceId(),
-  );
-
-  // Wire AuthManager callbacks (refresh/logout/reset) to repository and DI
-  final manager = ref.read(authManagerProvider);
-  manager.configure(
-    refresh: () async {
-      final rt = manager.refreshToken;
-      if (rt == null || rt.isEmpty) return null;
-      return repo.refresh(refreshToken: rt);
-    },
-    networkLogout: (rt) => repo.signOut(refreshToken: rt),
-    resetGrpc: ref.read(grpcResetterProvider),
-  );
-  return repo;
+  return GrpcAuthRepository(ref.read(authServiceClientProvider));
 });
 
 final isAuthenticatedProvider = Provider<bool>((ref) {
-  final authState = ref.watch(authControllerProvider);
   final tokensAsync = ref.watch(tokensStreamProvider);
-  final hasRefresh = tokensAsync.maybeWhen(
+  return tokensAsync.maybeWhen(
     data: (tokens) => (tokens?.refreshToken ?? '').isNotEmpty,
     orElse: () => false,
   );
-  return authState.user != null && hasRefresh;
 });

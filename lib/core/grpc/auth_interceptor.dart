@@ -1,22 +1,28 @@
 import 'dart:async';
 
 import 'package:grpc/grpc.dart';
-import 'package:peopleslab/core/auth/auth_manager.dart';
-import 'package:peopleslab/core/logging/logger.dart';
+import 'package:peopleslab/core/auth/token_storage.dart';
+import 'package:peopleslab/core/auth/user_storage.dart';
 
 class AuthInterceptor extends ClientInterceptor {
   // Public so callers can share the same key
   static const kSkipKey = 'x-skip-auth';
-  final AuthManager authManager;
+  final TokenStorage storage;
+  final Future<bool> Function(String refreshToken) refresh;
+  final UserStorage? userStorage;
 
-  AuthInterceptor({required this.authManager});
+  AuthInterceptor({
+    required this.storage,
+    required this.refresh,
+    this.userStorage,
+  });
 
   bool _shouldSkip(CallOptions options) =>
       options.metadata.containsKey(kSkipKey);
 
-  void _attachAuthIfNeeded(Map<String, String> md, bool skip) {
+  Future<void> _attachAuthIfNeeded(Map<String, String> md, bool skip) async {
     if (skip) return;
-    final access = authManager.accessToken;
+    final access = (await storage.getTokens())?.accessToken;
     if (access != null &&
         access.isNotEmpty &&
         !md.containsKey('authorization')) {
@@ -24,7 +30,6 @@ class AuthInterceptor extends ClientInterceptor {
     }
   }
 
-  // Unary with optional soft pre-refresh -> attach -> single call
   @override
   ResponseFuture<R> interceptUnary<Q, R>(
     ClientMethod<Q, R> method,
@@ -42,7 +47,7 @@ class AuthInterceptor extends ClientInterceptor {
               // Clean internal headers
               md.remove(kSkipKey);
               // Attach auth header (if any)
-              _attachAuthIfNeeded(md, skip);
+              await _attachAuthIfNeeded(md, skip);
             },
           ],
         ),
@@ -50,17 +55,26 @@ class AuthInterceptor extends ClientInterceptor {
     }
 
     final call = invoker(method, request, withHeaders());
-
-    // On 401: signal AuthManager (no retry here).
-    call.catchError((Object e, StackTrace st) {
+    call.catchError((Object e, StackTrace st) async {
       if (e is GrpcError && e.code == StatusCode.unauthenticated && !skip) {
-        appLogger.w('auth_interceptor|401 path=${method.path}');
-        // Fire-and-forget
-        Future.microtask(() => authManager.handleUnauthorized());
+        // Fire refresh on 401; no retry here, keep it simple
+        final rt = (await storage.getTokens())?.refreshToken;
+        if (rt != null && rt.isNotEmpty) {
+          try {
+            await refresh(rt);
+            // We intentionally do not retry the original call here.
+            // Regardless of refresh success, propagate the original error.
+          } catch (_) {
+            // fallthrough to cleanup
+          }
+        }
+        await storage.clearTokens();
+        // Keep user state consistent on forced logout
+        await userStorage?.clearUser();
       }
-      throw e;
+      // Always propagate the original error with its stack trace.
+      return Future<R>.error(e, st);
     });
-
     return call;
   }
 }

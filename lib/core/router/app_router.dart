@@ -3,9 +3,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/nav.dart';
-import 'package:peopleslab/app/home_page.dart';
-import 'package:peopleslab/app/onboarding_page.dart';
-import 'package:peopleslab/app/welcome_page.dart';
+import 'package:peopleslab/features/home/presentation/home_page.dart';
+import 'package:peopleslab/features/onboarding/presentation/onboarding_page.dart';
+import 'package:peopleslab/features/onboarding/presentation/welcome_page.dart';
 import 'package:peopleslab/core/di/providers.dart';
 import 'package:peopleslab/features/auth/presentation/forgot_password_page.dart';
 import 'package:peopleslab/features/auth/presentation/sign_in_page.dart';
@@ -13,8 +13,10 @@ import 'package:peopleslab/features/auth/presentation/sign_up_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_in_page.dart';
 import 'package:peopleslab/features/auth/presentation/email_sign_up_page.dart';
 import 'package:peopleslab/core/logging/logger.dart';
+import 'package:peopleslab/core/router/bootstrap_page.dart';
 
 class AppRoutes {
+  static const String bootstrap = '/bootstrap';
   static const String welcome = '/welcome';
   static const String onboarding = '/onboarding';
   static const String signIn = '/signin';
@@ -29,6 +31,7 @@ class AppRoutes {
 
 // Public routes (no auth required)
 const Set<String> publicRoutes = {
+  AppRoutes.bootstrap,
   AppRoutes.welcome,
   AppRoutes.onboarding,
   AppRoutes.signIn,
@@ -52,9 +55,24 @@ class RouterNotifier extends ChangeNotifier {
 
   String? redirect(BuildContext context, GoRouterState state) {
     final loc = state.matchedLocation;
+    final hydrated = ref.read(authHydratedProvider);
     final isAuthed = ref.read(isAuthenticatedProvider);
     final statusStr = isAuthed ? 'authenticated' : 'unauthenticated';
     appLogger.i('Router: redirect loc="$loc" status=$statusStr');
+
+    // Hold at bootstrap until auth state is hydrated
+    if (!hydrated) {
+      if (loc != AppRoutes.bootstrap) {
+        appLogger.i('Router: -> bootstrap (waiting hydration)');
+        return AppRoutes.bootstrap;
+      }
+      return null;
+    }
+
+    // After hydration, leave bootstrap to the right destination
+    if (loc == AppRoutes.bootstrap) {
+      return isAuthed ? AppRoutes.home : AppRoutes.welcome;
+    }
 
     if (!isAuthed && !publicRoutes.contains(loc)) {
       appLogger.i('Router: unauthenticated -> welcome');
@@ -71,12 +89,16 @@ class RouterNotifier extends ChangeNotifier {
 final goRouterProvider = Provider<GoRouter>((ref) {
   final notifier = RouterNotifier(ref);
   return GoRouter(
-    initialLocation: AppRoutes.welcome,
+    initialLocation: AppRoutes.bootstrap,
     debugLogDiagnostics: kDebugMode,
     navigatorKey: rootNavigatorKey,
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [
+      GoRoute(
+        path: AppRoutes.bootstrap,
+        builder: (context, state) => const BootstrapPage(),
+      ),
       GoRoute(
         path: AppRoutes.welcome,
         builder: (context, state) => const WelcomePage(),

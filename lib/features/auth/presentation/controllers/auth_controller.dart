@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/core/di/providers.dart';
-import 'package:peopleslab/features/auth/domain/auth_repository.dart';
-import 'package:peopleslab/core/auth/auth_manager.dart';
+import 'package:peopleslab/features/auth/data/auth_repository.dart';
+import 'package:peopleslab/core/auth/token_storage.dart';
+import 'package:peopleslab/core/auth/user_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -24,18 +25,16 @@ class AuthState {
 
 class AuthController extends StateNotifier<AuthState> {
   final AuthRepository _repo;
-  final AuthManager _auth;
-  AuthController(this._repo, this._auth) : super(const AuthState());
+  final TokenStorage _storage;
+  final UserStorage _userStorage;
+  AuthController(this._repo, this._storage, this._userStorage)
+    : super(const AuthState());
 
-  /// Tries to load current user using existing session
+  /// Loads current user from persistent storage (no network GetMe)
   Future<void> loadCurrentUser() async {
-    try {
-      final me = await _repo.getMe();
-      if (me != null) {
-        state = state.copyWith(user: me);
-      }
-    } catch (_) {
-      // Unauthenticated or transient errors are handled by interceptor; ignore here
+    final me = await _userStorage.getUser();
+    if (me != null) {
+      state = state.copyWith(user: me);
     }
   }
 
@@ -43,7 +42,13 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(loading: true, errorMessage: null);
     try {
       final session = await _repo.signIn(email: email, password: password);
-      await _auth.applySessionTokens(session.tokens);
+      await _storage.writeTokens(
+        accessToken: session.tokens.accessToken,
+        refreshToken: session.tokens.refreshToken,
+        accessExpiresIn: session.tokens.expiresIn,
+        refreshExpiresIn: session.tokens.refreshExpiresIn,
+      );
+      await _userStorage.writeUser(session.user);
       state = state.copyWith(loading: false, user: session.user);
       return true;
     } catch (e) {
@@ -56,7 +61,13 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(loading: true, errorMessage: null);
     try {
       final session = await _repo.signUp(email: email, password: password);
-      await _auth.applySessionTokens(session.tokens);
+      await _storage.writeTokens(
+        accessToken: session.tokens.accessToken,
+        refreshToken: session.tokens.refreshToken,
+        accessExpiresIn: session.tokens.expiresIn,
+        refreshExpiresIn: session.tokens.refreshExpiresIn,
+      );
+      await _userStorage.writeUser(session.user);
       state = state.copyWith(loading: false, user: session.user);
       return true;
     } catch (e) {
@@ -66,7 +77,16 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
-    await _auth.signOut();
+    final rt = (await _storage.getTokens())?.refreshToken;
+    if (rt != null && rt.isNotEmpty) {
+      try {
+        await _repo.signOut(refreshToken: rt);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+    await _storage.clearTokens();
+    await _userStorage.clearUser();
     state = const AuthState();
   }
 
@@ -85,7 +105,13 @@ class AuthController extends StateNotifier<AuthState> {
         return false;
       }
       final session = await _repo.signInWithGoogle(idToken: idToken);
-      await _auth.applySessionTokens(session.tokens);
+      await _storage.writeTokens(
+        accessToken: session.tokens.accessToken,
+        refreshToken: session.tokens.refreshToken,
+        accessExpiresIn: session.tokens.expiresIn,
+        refreshExpiresIn: session.tokens.refreshExpiresIn,
+      );
+      await _userStorage.writeUser(session.user);
       state = state.copyWith(loading: false, user: session.user);
       return true;
     } on GoogleSignInException catch (e) {
@@ -126,7 +152,13 @@ class AuthController extends StateNotifier<AuthState> {
         return false;
       }
       final session = await _repo.signInWithApple(idToken: idToken);
-      await _auth.applySessionTokens(session.tokens);
+      await _storage.writeTokens(
+        accessToken: session.tokens.accessToken,
+        refreshToken: session.tokens.refreshToken,
+        accessExpiresIn: session.tokens.expiresIn,
+        refreshExpiresIn: session.tokens.refreshExpiresIn,
+      );
+      await _userStorage.writeUser(session.user);
       state = state.copyWith(loading: false, user: session.user);
       return true;
     } catch (e) {
@@ -171,8 +203,9 @@ class AuthController extends StateNotifier<AuthState> {
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
   (ref) {
     final repo = ref.read(authRepositoryProvider);
-    final auth = ref.read(authManagerProvider);
-    final c = AuthController(repo, auth);
+    final storage = ref.read(tokenStorageProvider);
+    final users = ref.read(userStorageProvider);
+    final c = AuthController(repo, storage, users);
     // On startup: attempt to load current user; interceptor handles 401/refresh
     Future.microtask(() async {
       await c.loadCurrentUser();

@@ -40,7 +40,8 @@ class LoggingInterceptor extends ClientInterceptor {
           'grpc|error id=$requestId path=${method.path} type=${e.runtimeType}',
         );
       }
-      throw e;
+      // Propagate the original error with its stack trace and correct type.
+      return Future<R>.error(e, st);
     });
 
     return call;

@@ -28,13 +28,8 @@ class AuthSession {
 abstract class AuthRepository {
   Future<AuthSession> signIn({required String email, required String password});
   Future<AuthSession> signUp({required String email, required String password});
-  // Network logout; does not clear local storage.
   Future<void> signOut({required String refreshToken});
-  // Refresh access token; returns new tokens or null on failure.
   Future<AuthTokens?> refresh({required String refreshToken});
-
-  // Load current user profile using existing session; returns null if unauthenticated.
-  Future<AuthUser?> getMe();
 
   // Social sign-in
   Future<AuthSession> signInWithGoogle({required String idToken});
