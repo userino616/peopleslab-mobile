@@ -18,5 +18,7 @@ String localizeError(BuildContext context, String? code) {
 void showAuthSnack(BuildContext context, String? code) {
   final msg = localizeError(context, code);
   // Safe use even when no Scaffold present; callers should provide a Scaffold context
-  ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(content: Text(msg)));
+  ScaffoldMessenger.maybeOf(
+    context,
+  )?.showSnackBar(SnackBar(content: Text(msg)));
 }

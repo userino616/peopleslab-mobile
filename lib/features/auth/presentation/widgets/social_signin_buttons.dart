@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/core/l10n/l10n_x.dart';
 import 'package:peopleslab/core/l10n/l10n_helpers.dart';
@@ -24,7 +25,9 @@ class SocialSignInButtons extends ConsumerWidget {
                 if (!ok) {
                   final code = ref.read(authControllerProvider).errorMessage;
                   final msg = localizeError(context, code);
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(msg)));
                 }
               },
         child: Text(context.l10n.signin_social_google),
@@ -43,7 +46,9 @@ class SocialSignInButtons extends ConsumerWidget {
                   if (!ok) {
                     final code = ref.read(authControllerProvider).errorMessage;
                     final msg = localizeError(context, code);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(msg)));
                   }
                 },
           child: Text(context.l10n.signin_social_apple),
@@ -51,6 +56,9 @@ class SocialSignInButtons extends ConsumerWidget {
       );
     }
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    );
   }
 }

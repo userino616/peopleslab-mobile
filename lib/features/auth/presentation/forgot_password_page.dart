@@ -40,12 +40,15 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       if (!mounted) return;
       if (ok) {
         setState(() => _codeSent = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.snack_code_sent)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(s.snack_code_sent)));
       } else {
-        final err = ref.read(authControllerProvider).errorMessage ?? s.error_generic;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+        final err =
+            ref.read(authControllerProvider).errorMessage ?? s.error_generic;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(err)));
       }
     } else {
       // Stage 2: set new password
@@ -53,11 +56,15 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       final code = _codeCtrl.text.trim();
       final pass = _passCtrl.text;
       if (code.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.validation_code_required)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(s.validation_code_required)));
         return;
       }
       if (_confirmCtrl.text != pass) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.validation_passwords_not_match)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.validation_passwords_not_match)),
+        );
         return;
       }
       final ok = await ref
@@ -65,13 +72,16 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           .resetPassword(email: email, code: code, newPassword: pass);
       if (!mounted) return;
       if (ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.snack_password_updated)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(s.snack_password_updated)));
         Navigator.of(context).pop();
       } else {
-        final err = ref.read(authControllerProvider).errorMessage ?? s.error_generic;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+        final err =
+            ref.read(authControllerProvider).errorMessage ?? s.error_generic;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(err)));
       }
     }
   }
@@ -92,10 +102,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    s.forgot_intro,
-                    textAlign: TextAlign.center,
-                  ),
+                  Text(s.forgot_intro, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _emailCtrl,
@@ -108,12 +115,14 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _codeCtrl,
-                      decoration: InputDecoration(labelText: s.label_code_from_email),
+                      decoration: InputDecoration(
+                        labelText: s.label_code_from_email,
+                      ),
                       validator: (v) => !_codeSent
                           ? null
                           : (v == null || v.trim().isEmpty)
-                              ? s.validation_code_required
-                              : null,
+                          ? s.validation_code_required
+                          : null,
                     ),
                     Align(
                       alignment: Alignment.centerRight,
@@ -127,11 +136,19 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                 if (!context.mounted) return;
                                 if (ok) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(s.snack_code_resent)),
+                                    SnackBar(
+                                      content: Text(s.snack_code_resent),
+                                    ),
                                   );
                                 } else {
-                                  final err = ref.read(authControllerProvider).errorMessage ?? s.error_send_code;
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+                                  final err =
+                                      ref
+                                          .read(authControllerProvider)
+                                          .errorMessage ??
+                                      s.error_send_code;
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(SnackBar(content: Text(err)));
                                 }
                               },
                         child: Text(s.resend_code),
@@ -142,19 +159,25 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                       controller: _passCtrl,
                       decoration: InputDecoration(labelText: s.label_password),
                       obscureText: true,
-                      validator: (v) => !_codeSent ? null : Validators.password(context, v),
+                      validator: (v) =>
+                          !_codeSent ? null : Validators.password(context, v),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _confirmCtrl,
-                      decoration: InputDecoration(labelText: s.label_password_confirm),
+                      decoration: InputDecoration(
+                        labelText: s.label_password_confirm,
+                      ),
                       obscureText: true,
-                      validator: (v) => !_codeSent ? null : Validators.password(context, v),
+                      validator: (v) =>
+                          !_codeSent ? null : Validators.password(context, v),
                     ),
                   ],
                   const SizedBox(height: 16),
                   PrimaryButton(
-                    label: _codeSent ? s.primary_update_password : s.primary_send_code,
+                    label: _codeSent
+                        ? s.primary_update_password
+                        : s.primary_send_code,
                     loading: state.loading,
                     onPressed: _submit,
                   ),

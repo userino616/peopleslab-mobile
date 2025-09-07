@@ -27,7 +27,9 @@ final grpcChannelProvider = Provider<ClientChannelBase>((ref) {
   return channel;
 });
 
-final tokenStorageProvider = Provider<TokenStorage>((ref) => TokenStorage(const FlutterSecureStorage()));
+final tokenStorageProvider = Provider<TokenStorage>(
+  (ref) => TokenStorage(const FlutterSecureStorage()),
+);
 
 /// Reactive stream of token changes emitted by TokenStorage.
 final tokensStreamProvider = StreamProvider<Tokens?>((ref) {
@@ -59,7 +61,6 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
-/// Єдина «правда» про авторизацію: користувач є в стані + є refreshToken
 final isAuthenticatedProvider = Provider<bool>((ref) {
   final authState = ref.watch(authControllerProvider);
   final tokensAsync = ref.watch(tokensStreamProvider);

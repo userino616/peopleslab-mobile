@@ -9,9 +9,12 @@ void main() {
   FlutterError.onError = (details) {
     FlutterError.dumpErrorToConsole(details);
   };
-  runZonedGuarded(() {
-    runApp(const ProviderScope(child: App()));
-  }, (error, stack) {
-    appLogger.e('Uncaught zone error', error: error, stackTrace: stack);
-  });
+  runZonedGuarded(
+    () {
+      runApp(const ProviderScope(child: App()));
+    },
+    (error, stack) {
+      appLogger.e('Uncaught zone error', error: error, stackTrace: stack);
+    },
+  );
 }

@@ -3,5 +3,6 @@ import 'grpc_channel_io.dart' as impl;
 
 class GrpcClientFactory {
   static ClientChannelBase createChannel() => impl.createChannel();
-  static Future<void> shutdownChannel(ClientChannelBase channel) => impl.shutdownChannel(channel);
+  static Future<void> shutdownChannel(ClientChannelBase channel) =>
+      impl.shutdownChannel(channel);
 }

@@ -22,18 +22,19 @@ class WelcomePage extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  s.welcome_intro,
-                  textAlign: TextAlign.center,
-                ),
+                Text(s.welcome_intro, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
                 FilledButton(
-                  onPressed: state.loading ? null : () => context.go(AppRoutes.onboarding),
+                  onPressed: state.loading
+                      ? null
+                      : () => context.go(AppRoutes.onboarding),
                   child: Text(s.onboarding_cta),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: state.loading ? null : () => context.push(AppRoutes.signIn),
+                  onPressed: state.loading
+                      ? null
+                      : () => context.push(AppRoutes.signIn),
                   child: Text(s.cta_already_have_account),
                 ),
               ],

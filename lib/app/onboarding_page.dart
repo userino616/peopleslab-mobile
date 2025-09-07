@@ -19,13 +19,13 @@ class OnboardingPage extends StatelessWidget {
             children: [
               Text(
                 s.brand_name,
-                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
-              Text(
-                s.onboarding_intro,
-                textAlign: TextAlign.center,
-              ),
+              Text(s.onboarding_intro, textAlign: TextAlign.center),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () => context.push(AppRoutes.signUp),
@@ -35,7 +35,7 @@ class OnboardingPage extends StatelessWidget {
               TextButton(
                 onPressed: () => context.push(AppRoutes.signIn),
                 child: Text(s.cta_already_have_account),
-              )
+              ),
             ],
           ),
         ),

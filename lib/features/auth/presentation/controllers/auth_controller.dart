@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/core/di/providers.dart';
 import 'package:peopleslab/features/auth/domain/auth_repository.dart';
@@ -73,7 +74,10 @@ class AuthController extends StateNotifier<AuthState> {
       final acc = await google.authenticate(scopeHint: const ['email']);
       final idToken = acc.authentication.idToken;
       if (idToken == null || idToken.isEmpty) {
-        state = state.copyWith(loading: false, errorMessage: 'auth.google_id_missing');
+        state = state.copyWith(
+          loading: false,
+          errorMessage: 'auth.google_id_missing',
+        );
         return false;
       }
       final user = await _repo.signInWithGoogle(idToken: idToken);
@@ -95,18 +99,25 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<bool> signInWithApple() async {
     // Only meaningful on iOS/macOS
-    if (defaultTargetPlatform != TargetPlatform.iOS && defaultTargetPlatform != TargetPlatform.macOS) {
+    if (defaultTargetPlatform != TargetPlatform.iOS &&
+        defaultTargetPlatform != TargetPlatform.macOS) {
       state = state.copyWith(errorMessage: 'auth.apple_unsupported');
       return false;
     }
     state = state.copyWith(loading: true, errorMessage: null);
     try {
       final credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
       );
       final idToken = credential.identityToken;
       if (idToken == null || idToken.isEmpty) {
-        state = state.copyWith(loading: false, errorMessage: 'auth.apple_id_missing');
+        state = state.copyWith(
+          loading: false,
+          errorMessage: 'auth.apple_id_missing',
+        );
         return false;
       }
       final user = await _repo.signInWithApple(idToken: idToken);
@@ -130,10 +141,18 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> resetPassword({required String email, required String code, required String newPassword}) async {
+  Future<bool> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
     state = state.copyWith(loading: true, errorMessage: null);
     try {
-      await _repo.resetPassword(email: email, code: code, newPassword: newPassword);
+      await _repo.resetPassword(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      );
       state = state.copyWith(loading: false);
       return true;
     } catch (e) {
@@ -143,17 +162,19 @@ class AuthController extends StateNotifier<AuthState> {
   }
 }
 
-final authControllerProvider = StateNotifierProvider<AuthController, AuthState>((ref) {
-  final repo = ref.read(authRepositoryProvider);
-  final c = AuthController(repo);
-  // On startup: if we have a refresh token, try to load the user profile
-  final storage = ref.read(tokenStorageProvider);
-  Future.microtask(() async {
-    final tokens = await storage.getTokens();
-    final hasRefresh = (tokens?.refreshToken ?? '').isNotEmpty;
-    if (hasRefresh) {
-      await c.loadCurrentUser();
-    }
-  });
-  return c;
-});
+final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
+  (ref) {
+    final repo = ref.read(authRepositoryProvider);
+    final c = AuthController(repo);
+    // On startup: if we have a refresh token, try to load the user profile
+    final storage = ref.read(tokenStorageProvider);
+    Future.microtask(() async {
+      final tokens = await storage.getTokens();
+      final hasRefresh = (tokens?.refreshToken ?? '').isNotEmpty;
+      if (hasRefresh) {
+        await c.loadCurrentUser();
+      }
+    });
+    return c;
+  },
+);

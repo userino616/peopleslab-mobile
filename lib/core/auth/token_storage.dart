@@ -23,13 +23,12 @@ class Tokens {
     String? refreshToken,
     int? accessExpiryMillis,
     int? refreshExpiryMillis,
-  }) =>
-      Tokens(
-        accessToken: accessToken ?? this.accessToken,
-        refreshToken: refreshToken ?? this.refreshToken,
-        accessExpiryMillis: accessExpiryMillis ?? this.accessExpiryMillis,
-        refreshExpiryMillis: refreshExpiryMillis ?? this.refreshExpiryMillis,
-      );
+  }) => Tokens(
+    accessToken: accessToken ?? this.accessToken,
+    refreshToken: refreshToken ?? this.refreshToken,
+    accessExpiryMillis: accessExpiryMillis ?? this.accessExpiryMillis,
+    refreshExpiryMillis: refreshExpiryMillis ?? this.refreshExpiryMillis,
+  );
 }
 
 /// Public backend interface to support testing/custom storage backends.
@@ -50,7 +49,8 @@ class _FSSStore implements TokenStoreBackend {
   Future<String?> read({required String key}) => _inner.read(key: key);
 
   @override
-  Future<void> write({required String key, required String? value}) => _inner.write(key: key, value: value);
+  Future<void> write({required String key, required String? value}) =>
+      _inner.write(key: key, value: value);
 }
 
 class TokenStorage {
@@ -75,7 +75,8 @@ class TokenStorage {
   Completer<void>? _writeLock;
 
   // Reactive updates: broadcast token changes on writes/clear
-  final StreamController<Tokens?> _tokensController = StreamController<Tokens?>.broadcast();
+  final StreamController<Tokens?> _tokensController =
+      StreamController<Tokens?>.broadcast();
   Stream<Tokens?> get tokensStream => _tokensController.stream;
 
   Future<T> _withWriteLock<T>(Future<T> Function() action) async {
@@ -97,8 +98,12 @@ class TokenStorage {
     final refresh = await _store.read(key: _kRefresh);
     final aexpStr = await _store.read(key: _kAccessExp);
     final rexpStr = await _store.read(key: _kRefreshExp);
-    final aexp = aexpStr == null || aexpStr.isEmpty ? null : int.tryParse(aexpStr);
-    final rexp = rexpStr == null || rexpStr.isEmpty ? null : int.tryParse(rexpStr);
+    final aexp = aexpStr == null || aexpStr.isEmpty
+        ? null
+        : int.tryParse(aexpStr);
+    final rexp = rexpStr == null || rexpStr.isEmpty
+        ? null
+        : int.tryParse(rexpStr);
     final t = Tokens(
       accessToken: access,
       refreshToken: refresh,
@@ -158,8 +163,12 @@ class TokenStorage {
       final prev = _cache;
 
       final now = DateTime.now().millisecondsSinceEpoch;
-      int? accessExpMs = accessExpiresIn == null ? null : now + accessExpiresIn * 1000;
-      int? refreshExpMs = refreshExpiresIn == null ? prev?.refreshExpiryMillis : now + refreshExpiresIn * 1000;
+      int? accessExpMs = accessExpiresIn == null
+          ? null
+          : now + accessExpiresIn * 1000;
+      int? refreshExpMs = refreshExpiresIn == null
+          ? prev?.refreshExpiryMillis
+          : now + refreshExpiresIn * 1000;
 
       // No platform-specific TTL capping
 
@@ -185,7 +194,9 @@ class TokenStorage {
           refreshExpiryMillis: refreshExpMs,
         );
         // Emit change event
-        appLogger.i('TokenStorage: emit write (access?=${_cache?.accessToken != null}, refresh?=${_cache?.refreshToken != null})');
+        appLogger.i(
+          'TokenStorage: emit write (access?=${_cache?.accessToken != null}, refresh?=${_cache?.refreshToken != null})',
+        );
         _tokensController.add(_cache);
       } catch (e) {
         // Rollback best-effort to previous values
@@ -200,12 +211,18 @@ class TokenStorage {
           await _store.delete(key: _kRefresh);
         }
         if (prev?.accessExpiryMillis != null) {
-          await _store.write(key: _kAccessExp, value: prev!.accessExpiryMillis.toString());
+          await _store.write(
+            key: _kAccessExp,
+            value: prev!.accessExpiryMillis.toString(),
+          );
         } else {
           await _store.delete(key: _kAccessExp);
         }
         if (prev?.refreshExpiryMillis != null) {
-          await _store.write(key: _kRefreshExp, value: prev!.refreshExpiryMillis.toString());
+          await _store.write(
+            key: _kRefreshExp,
+            value: prev!.refreshExpiryMillis.toString(),
+          );
         } else {
           await _store.delete(key: _kRefreshExp);
         }

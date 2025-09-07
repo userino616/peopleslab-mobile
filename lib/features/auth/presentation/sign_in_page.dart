@@ -14,9 +14,7 @@ class SignInPage extends ConsumerWidget {
     final state = ref.watch(authControllerProvider);
     final s = context.l10n;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(s.signin_title),
-      ),
+      appBar: AppBar(title: Text(s.signin_title)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),

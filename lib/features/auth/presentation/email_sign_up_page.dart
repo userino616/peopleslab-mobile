@@ -54,7 +54,9 @@ class _EmailSignUpPageState extends ConsumerState<EmailSignUpPage> {
           );
           return;
         }
-        final ok = await ref.read(authControllerProvider.notifier).signUp(email, password);
+        final ok = await ref
+            .read(authControllerProvider.notifier)
+            .signUp(email, password);
         if (!context.mounted) return;
         if (!ok) {
           final code = ref.read(authControllerProvider).errorMessage;

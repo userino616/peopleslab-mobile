@@ -77,14 +77,38 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [
-      GoRoute(path: AppRoutes.welcome, builder: (context, state) => const WelcomePage()),
-      GoRoute(path: AppRoutes.onboarding, builder: (context, state) => const OnboardingPage()),
-      GoRoute(path: AppRoutes.signIn, builder: (context, state) => const SignInPage()),
-      GoRoute(path: AppRoutes.signUp, builder: (context, state) => const SignUpPage()),
-      GoRoute(path: AppRoutes.emailSignIn, builder: (context, state) => const EmailSignIn()),
-      GoRoute(path: AppRoutes.emailSignUp, builder: (context, state) => const EmailSignUpPage()),
-      GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordPage()),
-      GoRoute(path: AppRoutes.home, builder: (context, state) => const HomePage()),
+      GoRoute(
+        path: AppRoutes.welcome,
+        builder: (context, state) => const WelcomePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.signIn,
+        builder: (context, state) => const SignInPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.signUp,
+        builder: (context, state) => const SignUpPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.emailSignIn,
+        builder: (context, state) => const EmailSignIn(),
+      ),
+      GoRoute(
+        path: AppRoutes.emailSignUp,
+        builder: (context, state) => const EmailSignUpPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.home,
+        builder: (context, state) => const HomePage(),
+      ),
     ],
   );
 });

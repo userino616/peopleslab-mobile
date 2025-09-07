@@ -76,7 +76,10 @@ class _AuthEmailPasswordFormState extends State<AuthEmailPasswordForm> {
                   ),
                   const SizedBox(height: 16),
                   if (widget.middleSlot != null) ...[
-                    Align(alignment: Alignment.centerRight, child: widget.middleSlot!),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: widget.middleSlot!,
+                    ),
                     const SizedBox(height: 8),
                   ],
                   PrimaryButton(

@@ -26,12 +26,16 @@ class SignUpPage extends ConsumerWidget {
                 const SocialSignInButtons(),
                 const SizedBox(height: 8),
                 FilledButton(
-                  onPressed: state.loading ? null : () => context.push(AppRoutes.emailSignUp),
+                  onPressed: state.loading
+                      ? null
+                      : () => context.push(AppRoutes.emailSignUp),
                   child: Text(s.signup_create_account),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: state.loading ? null : () => context.push(AppRoutes.signIn),
+                  onPressed: state.loading
+                      ? null
+                      : () => context.push(AppRoutes.signIn),
                   child: Text(s.cta_already_have_account),
                 ),
               ],

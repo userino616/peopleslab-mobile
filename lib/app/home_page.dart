@@ -22,7 +22,7 @@ class HomePage extends ConsumerWidget {
                 await ref.read(authControllerProvider.notifier).signOut();
               },
               child: Text(s.action_sign_out),
-            )
+            ),
           ],
         ),
       ),

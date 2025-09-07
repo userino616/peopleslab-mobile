@@ -24,11 +24,15 @@ class _EmailSignInPageState extends ConsumerState<EmailSignIn> {
       primaryLabel: s.primary_signin,
       loading: state.loading,
       middleSlot: TextButton(
-        onPressed: state.loading ? null : () => context.push(AppRoutes.forgotPassword),
+        onPressed: state.loading
+            ? null
+            : () => context.push(AppRoutes.forgotPassword),
         child: Text(s.signin_forgot),
       ),
       onSubmit: (email, password) async {
-        final ok = await ref.read(authControllerProvider.notifier).signIn(email, password);
+        final ok = await ref
+            .read(authControllerProvider.notifier)
+            .signIn(email, password);
         if (!context.mounted) return;
         if (!ok) {
           final code = ref.read(authControllerProvider).errorMessage;

@@ -28,12 +28,15 @@ class AuthInterceptor extends ClientInterceptor {
     _onAuthFailure = onAuthFailure;
   }
 
-  bool _shouldSkip(CallOptions options) => options.metadata.containsKey(kSkipKey);
+  bool _shouldSkip(CallOptions options) =>
+      options.metadata.containsKey(kSkipKey);
 
   FutureOr<void> _attachAuthIfNeeded(Map<String, String> md, bool skip) async {
     if (skip) return;
     final access = await storage.readAccessToken();
-    if (access != null && access.isNotEmpty && !md.containsKey('authorization')) {
+    if (access != null &&
+        access.isNotEmpty &&
+        !md.containsKey('authorization')) {
       md['authorization'] = 'Bearer $access';
     }
   }
@@ -77,11 +80,11 @@ class AuthInterceptor extends ClientInterceptor {
   // Unary with optional soft pre-refresh -> attach -> single call
   @override
   ResponseFuture<R> interceptUnary<Q, R>(
-      ClientMethod<Q, R> method,
-      Q request,
-      CallOptions options,
-      ClientUnaryInvoker<Q, R> invoker,
-      ) {
+    ClientMethod<Q, R> method,
+    Q request,
+    CallOptions options,
+    ClientUnaryInvoker<Q, R> invoker,
+  ) {
     final skip = _shouldSkip(options);
     final requestId = const Uuid().v4();
 
@@ -89,7 +92,7 @@ class AuthInterceptor extends ClientInterceptor {
       return options.mergedWith(
         CallOptions(
           providers: [
-                (md, _) async {
+            (md, _) async {
               // Clean internal headers
               md.remove(kSkipKey);
               // Tracing
@@ -103,20 +106,29 @@ class AuthInterceptor extends ClientInterceptor {
                   final exp = await storage.readAccessExpiryMillis();
                   final access = await storage.readAccessToken();
                   final needsRefresh =
-                      (access == null || access.isEmpty) || (exp != null && exp <= now + 5000);
+                      (access == null || access.isEmpty) ||
+                      (exp != null && exp <= now + 5000);
                   if (needsRefresh) {
-                    appLogger.i('auth_interceptor|pre_refresh:start id=$requestId path=${method.path}');
+                    appLogger.i(
+                      'auth_interceptor|pre_refresh:start id=$requestId path=${method.path}',
+                    );
                     final ok = await _refreshGuarded();
-                    appLogger.i('auth_interceptor|pre_refresh:end ok=$ok id=$requestId');
+                    appLogger.i(
+                      'auth_interceptor|pre_refresh:end ok=$ok id=$requestId',
+                    );
                   }
                 } catch (e) {
-                  appLogger.w('auth_interceptor|pre_refresh:error $e id=$requestId');
+                  appLogger.w(
+                    'auth_interceptor|pre_refresh:error $e id=$requestId',
+                  );
                 }
               }
 
               // Attach auth header (if any)
               await _attachAuthIfNeeded(md, skip);
-              appLogger.t('auth_interceptor|attach id=$requestId attempt=$attempt path=${method.path}');
+              appLogger.t(
+                'auth_interceptor|attach id=$requestId attempt=$attempt path=${method.path}',
+              );
             },
           ],
         ),
@@ -128,7 +140,9 @@ class AuthInterceptor extends ClientInterceptor {
     // On 401: trigger async failure handler (logout/cleanup). No custom retry here.
     call.catchError((Object e, StackTrace st) {
       if (e is GrpcError && e.code == StatusCode.unauthenticated && !skip) {
-        appLogger.w('auth_interceptor|401 id=$requestId attempt=1 path=${method.path}');
+        appLogger.w(
+          'auth_interceptor|401 id=$requestId attempt=1 path=${method.path}',
+        );
         _handleAuthFailureAsync();
       }
       throw e;
