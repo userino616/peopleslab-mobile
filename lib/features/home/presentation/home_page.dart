@@ -1,153 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:peopleslab/common/widgets/search_field.dart';
-import 'package:peopleslab/app/bottom_nav.dart';
+import 'package:peopleslab/features/demo/presentation/applications_page.dart';
+import 'package:peopleslab/features/demo/presentation/gamification_page.dart';
+import 'package:peopleslab/features/demo/presentation/receipts_page.dart';
+import 'package:peopleslab/features/demo/presentation/schedule_page.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final categories = const [
-      'Burgers',
-      'Pizza',
-      'Sushi',
-      'Desserts',
-      'Coffee',
-      'Healthy',
-    ];
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppSearchField(
-                      hintText: 'Search restaurants or dishes',
-                      onChanged: (_) {},
-                      onTap: () {
-                        // Open Search tab when tapping the search field
-                        ref.read(bottomNavIndexProvider.notifier).state = 1;
-                      },
-                      readOnly: true,
-                    ),
-                    const SizedBox(height: 12),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (final c in categories)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                label: Text(c),
-                                onSelected: (_) {},
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
-            ),
-            SliverList.builder(
-              itemCount: 6,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8,
-                  ),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 84,
-                              height: 84,
-                              color: colorScheme.primary.withValues(
-                                alpha: 0.08,
-                              ),
-                              child: Icon(
-                                Icons.restaurant_menu_rounded,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Blue Bite • ${categories[index % categories.length]}',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star_rounded,
-                                      size: 18,
-                                      color: Colors.amber[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text('4.${(index + 3) % 10} • 25-35 min'),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primary.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        'Free delivery',
-                                        style: theme.textTheme.labelMedium
-                                            ?.copyWith(
-                                              color: colorScheme.primary,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Popular: Chicken bowl, Pepperoni pizza',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
+      appBar: AppBar(title: const Text('PeoplesLab')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _FeatureCard(
+            title: 'Заяви',
+            subtitle: 'Подайте заяву та підпишіть її електронно',
+            icon: Icons.description_outlined,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ApplicationsPage()),
+              );
+            },
+          ),
+          _FeatureCard(
+            title: 'Робочий графік',
+            subtitle: 'Зручний формат на кожен день',
+            icon: Icons.schedule_rounded,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const WorkSchedulePage()),
+              );
+            },
+          ),
+          _FeatureCard(
+            title: 'Еко-чеки',
+            subtitle: 'Усі чеки в екологічному форматі',
+            icon: Icons.receipt_long_rounded,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ReceiptsPage()),
+              );
+            },
+          ),
+          _FeatureCard(
+            title: 'Добросусідство',
+            subtitle: 'Отримуйте нагороди за добрі справи',
+            icon: Icons.emoji_events_outlined,
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const GamificationPage()),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _FeatureCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Icon(icon, color: color),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+        onTap: onTap,
       ),
     );
   }
