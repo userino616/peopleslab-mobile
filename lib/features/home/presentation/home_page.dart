@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:peopleslab/common/widgets/search_field.dart';
-import 'package:peopleslab/app/bottom_nav.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -10,134 +8,96 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final categories = const [
-      'Burgers',
-      'Pizza',
-      'Sushi',
-      'Desserts',
-      'Coffee',
-      'Healthy',
-    ];
+
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppSearchField(
-                      hintText: 'Search restaurants or dishes',
-                      onChanged: (_) {},
-                      onTap: () {
-                        // Open Search tab when tapping the search field
-                        ref.read(bottomNavIndexProvider.notifier).state = 1;
-                      },
-                      readOnly: true,
-                    ),
-                    const SizedBox(height: 12),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          for (final c in categories)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                label: Text(c),
-                                onSelected: (_) {},
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Мій внесок',
+                              style: theme.textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '₴1 200',
+                              style: theme.textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                        ],
+                            const SizedBox(height: 12),
+                            const LinearProgressIndicator(value: 0.45),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Прогрес фінансування досліджень 45%',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Проєкти',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
             SliverList.builder(
-              itemCount: 6,
+              itemCount: _projects.length,
               itemBuilder: (context, index) {
+                final project = _projects[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
+                    horizontal: 16,
                     vertical: 8,
                   ),
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 84,
-                              height: 84,
-                              color: colorScheme.primary.withValues(
-                                alpha: 0.08,
-                              ),
-                              child: Icon(
-                                Icons.restaurant_menu_rounded,
-                                color: colorScheme.primary,
-                              ),
+                          Text(
+                            project.title,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Blue Bite • ${categories[index % categories.length]}',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star_rounded,
-                                      size: 18,
-                                      color: Colors.amber[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text('4.${(index + 3) % 10} • 25-35 min'),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primary.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        'Free delivery',
-                                        style: theme.textTheme.labelMedium
-                                            ?.copyWith(
-                                              color: colorScheme.primary,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Popular: Chicken bowl, Pepperoni pizza',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
+                          const SizedBox(height: 8),
+                          Text(
+                            project.description,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
+                          ),
+                          const SizedBox(height: 12),
+                          LinearProgressIndicator(value: project.progress),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('${(project.progress * 100).round()}% зібрано'),
+                              FilledButton(
+                                onPressed: () {},
+                                child: const Text('Підтримати'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -152,3 +112,30 @@ class HomePage extends ConsumerWidget {
     );
   }
 }
+
+class _Project {
+  const _Project(this.title, this.description, this.progress);
+
+  final String title;
+  final String description;
+  final double progress;
+}
+
+const _projects = [
+  _Project(
+    'Дослідження біодоступності вітаміну D',
+    'Вивчаємо, як засвоюється вітамін D з різних форм добавок.',
+    0.62,
+  ),
+  _Project(
+    'Омега-3 та когнітивні функції',
+    'Клінічне випробування впливу Омега-3 на памʼять.',
+    0.35,
+  ),
+  _Project(
+    'Рослинні імуномодулятори',
+    'Аналіз дії рослинних екстрактів на імунітет.',
+    0.80,
+  ),
+];
+
