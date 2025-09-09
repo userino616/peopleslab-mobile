@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/app/bottom_nav.dart';
 import 'package:peopleslab/features/home/presentation/home_page.dart';
 import 'package:peopleslab/features/search/presentation/search_page.dart';
+import 'package:peopleslab/features/projects/presentation/projects_page.dart';
 import 'package:peopleslab/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:peopleslab/core/theme/theme_provider.dart';
 import 'package:peopleslab/common/widgets/app_button.dart';
@@ -21,6 +22,7 @@ class MainShell extends ConsumerWidget {
         children: const [
           HomePage(),
           SearchPage(),
+          ProjectsPage(),
           _FavoritesPage(),
           _ProfilePage(),
         ],
@@ -40,6 +42,11 @@ class MainShell extends ConsumerWidget {
             icon: Icon(Icons.search_outlined),
             selectedIcon: Icon(Icons.search_rounded),
             label: 'Пошук',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.volunteer_activism_outlined),
+            selectedIcon: Icon(Icons.volunteer_activism),
+            label: 'Проєкти',
           ),
           NavigationDestination(
             icon: Icon(Icons.favorite_border_rounded),
