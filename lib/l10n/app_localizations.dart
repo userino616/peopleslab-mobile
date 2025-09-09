@@ -369,6 +369,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Passwords do not match'**
   String get validation_passwords_not_match;
+
+  /// No description provided for @searchProjectsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search research projects'**
+  String get searchProjectsHint;
+
+  /// No description provided for @supportProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Support project'**
+  String get supportProject;
+
+  /// No description provided for @categoryImmunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Immunity'**
+  String get categoryImmunity;
+
+  /// No description provided for @categoryEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy'**
+  String get categoryEnergy;
+
+  /// No description provided for @categorySleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get categorySleep;
+
+  /// No description provided for @categoryGutHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Gut health'**
+  String get categoryGutHealth;
 }
 
 class _AppLocalizationsDelegate

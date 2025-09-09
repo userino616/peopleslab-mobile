@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:peopleslab/common/widgets/search_field.dart';
 import 'package:peopleslab/app/bottom_nav.dart';
+import 'package:peopleslab/core/l10n/l10n_x.dart';
+import 'widgets/campaign_card.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -10,13 +12,35 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final categories = const [
-      'Burgers',
-      'Pizza',
-      'Sushi',
-      'Desserts',
-      'Coffee',
-      'Healthy',
+    final l10n = context.l10n;
+    final categories = [
+      l10n.categoryImmunity,
+      l10n.categoryEnergy,
+      l10n.categorySleep,
+      l10n.categoryGutHealth,
+    ];
+    final campaigns = [
+      (
+        title: 'Vitamin D and Immune Response',
+        description:
+            'Help fund a trial studying high-dose vitamin D for immune health.',
+        raised: 7200.0,
+        goal: 10000.0,
+      ),
+      (
+        title: 'Rhodiola and Endurance',
+        description:
+            'Support research on Rhodiola rosea for energy and stress.',
+        raised: 4300.0,
+        goal: 7500.0,
+      ),
+      (
+        title: 'Magnesium for Better Sleep',
+        description:
+            'Backing a study on magnesium glycinate and sleep quality.',
+        raised: 2100.0,
+        goal: 5000.0,
+      ),
     ];
     return Scaffold(
       body: SafeArea(
@@ -29,7 +53,7 @@ class HomePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AppSearchField(
-                      hintText: 'Search restaurants or dishes',
+                      hintText: l10n.searchProjectsHint,
                       onChanged: (_) {},
                       onTap: () {
                         // Open Search tab when tapping the search field
@@ -59,89 +83,19 @@ class HomePage extends ConsumerWidget {
               ),
             ),
             SliverList.builder(
-              itemCount: 6,
+              itemCount: campaigns.length,
               itemBuilder: (context, index) {
+                final c = campaigns[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16.0,
                     vertical: 8,
                   ),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 84,
-                              height: 84,
-                              color: colorScheme.primary.withValues(
-                                alpha: 0.08,
-                              ),
-                              child: Icon(
-                                Icons.restaurant_menu_rounded,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Blue Bite • ${categories[index % categories.length]}',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star_rounded,
-                                      size: 18,
-                                      color: Colors.amber[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text('4.${(index + 3) % 10} • 25-35 min'),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primary.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        'Free delivery',
-                                        style: theme.textTheme.labelMedium
-                                            ?.copyWith(
-                                              color: colorScheme.primary,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Popular: Chicken bowl, Pepperoni pizza',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: CampaignCard(
+                    title: c.title,
+                    description: c.description,
+                    raised: c.raised,
+                    goal: c.goal,
                   ),
                 );
               },

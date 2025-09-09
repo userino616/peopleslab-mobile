@@ -146,4 +146,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get validation_passwords_not_match => 'Passwords do not match';
+
+  @override
+  String get searchProjectsHint => 'Search research projects';
+
+  @override
+  String get supportProject => 'Support project';
+
+  @override
+  String get categoryImmunity => 'Immunity';
+
+  @override
+  String get categoryEnergy => 'Energy';
+
+  @override
+  String get categorySleep => 'Sleep';
+
+  @override
+  String get categoryGutHealth => 'Gut health';
 }
