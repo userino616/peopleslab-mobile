@@ -45,9 +45,9 @@ class AppSearchField extends StatelessWidget {
           const SizedBox(width: 12),
           Ink(
             decoration: ShapeDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+              color: colorScheme.surfaceVariant.withOpacity(0.6),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             child: IconButton(
