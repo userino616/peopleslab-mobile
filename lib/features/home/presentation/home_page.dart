@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:peopleslab/common/widgets/search_field.dart';
 import 'package:peopleslab/app/bottom_nav.dart';
+import 'package:peopleslab/common/widgets/search_field.dart';
+import 'widgets/project_card.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -11,12 +12,12 @@ class HomePage extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final categories = const [
-      'Burgers',
-      'Pizza',
-      'Sushi',
-      'Desserts',
-      'Coffee',
-      'Healthy',
+      'Immunity',
+      'Energy',
+      'Detox',
+      'Longevity',
+      'Sleep',
+      'Focus',
     ];
     return Scaffold(
       body: SafeArea(
@@ -29,10 +30,9 @@ class HomePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AppSearchField(
-                      hintText: 'Search restaurants or dishes',
+                      hintText: 'Search projects or supplements',
                       onChanged: (_) {},
                       onTap: () {
-                        // Open Search tab when tapping the search field
                         ref.read(bottomNavIndexProvider.notifier).state = 1;
                       },
                       readOnly: true,
@@ -61,87 +61,18 @@ class HomePage extends ConsumerWidget {
             SliverList.builder(
               itemCount: 6,
               itemBuilder: (context, index) {
+                final cat = categories[index % categories.length];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
+                    horizontal: 16,
                     vertical: 8,
                   ),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 84,
-                              height: 84,
-                              color: colorScheme.primary.withValues(
-                                alpha: 0.08,
-                              ),
-                              child: Icon(
-                                Icons.restaurant_menu_rounded,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Blue Bite • ${categories[index % categories.length]}',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star_rounded,
-                                      size: 18,
-                                      color: Colors.amber[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text('4.${(index + 3) % 10} • 25-35 min'),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primary.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        'Free delivery',
-                                        style: theme.textTheme.labelMedium
-                                            ?.copyWith(
-                                              color: colorScheme.primary,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Popular: Chicken bowl, Pepperoni pizza',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: ProjectCard(
+                    title: 'Research on $cat supplements',
+                    description:
+                        'Help fund independent research for $cat boosters.',
+                    raised: 2500 + index * 300,
+                    goal: 5000,
                   ),
                 );
               },
