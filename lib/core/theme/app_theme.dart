@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:peopleslab/core/theme/app_colors.dart';
 
 class AppTheme {
@@ -10,9 +11,11 @@ class AppTheme {
       brightness: Brightness.light,
     );
 
-    final baseTextTheme = Typography.material2021(
-      platform: TargetPlatform.android,
-    ).black;
+    final baseTextTheme = GoogleFonts.nunitoTextTheme(
+      Typography.material2021(
+        platform: TargetPlatform.android,
+      ).black,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -30,7 +33,7 @@ class AppTheme {
             color: selected
                 ? colorScheme.primary
                 : colorScheme.onSurfaceVariant,
-            size: selected ? 26 : 24,
+            size: selected ? 28 : 24,
           );
         }),
         // No labels are shown; text styles are not needed
@@ -55,23 +58,23 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
         hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
         prefixIconColor: colorScheme.onSurfaceVariant,
         suffixIconColor: colorScheme.onSurfaceVariant,
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
+        elevation: 1,
         color: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       dividerTheme: DividerThemeData(
         color: colorScheme.outlineVariant,
@@ -86,22 +89,22 @@ class AppTheme {
         ),
         labelStyle: TextStyle(color: colorScheme.onSurface),
         secondaryLabelStyle: TextStyle(color: colorScheme.onPrimary),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: colorScheme.surface,
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: colorScheme.onSurfaceVariant,
         type: BottomNavigationBarType.fixed,
-        selectedIconTheme: const IconThemeData(size: 26),
+        selectedIconTheme: const IconThemeData(size: 28),
         unselectedIconTheme: const IconThemeData(size: 24),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           textStyle: WidgetStatePropertyAll(
             baseTextTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -112,7 +115,7 @@ class AppTheme {
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           side: WidgetStatePropertyAll(
             BorderSide(color: colorScheme.outlineVariant),
@@ -123,7 +126,7 @@ class AppTheme {
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
       ),
@@ -135,7 +138,7 @@ class AppTheme {
         ),
       ),
       listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         selectedColor: colorScheme.primary,
         iconColor: colorScheme.onSurfaceVariant,
       ),
@@ -148,9 +151,11 @@ class AppTheme {
       brightness: Brightness.dark,
     );
 
-    final baseTextTheme = Typography.material2021(
-      platform: TargetPlatform.android,
-    ).white;
+    final baseTextTheme = GoogleFonts.nunitoTextTheme(
+      Typography.material2021(
+        platform: TargetPlatform.android,
+      ).white,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -168,7 +173,7 @@ class AppTheme {
             color: selected
                 ? colorScheme.primary
                 : colorScheme.onSurfaceVariant,
-            size: selected ? 26 : 24,
+            size: selected ? 28 : 24,
           );
         }),
         // No labels are shown; text styles are not needed
@@ -193,23 +198,23 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
         hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
         prefixIconColor: colorScheme.onSurfaceVariant,
         suffixIconColor: colorScheme.onSurfaceVariant,
       ),
       cardTheme: CardThemeData(
-        elevation: 0,
+        elevation: 1,
         color: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       dividerTheme: DividerThemeData(
         color: colorScheme.outlineVariant,
@@ -224,22 +229,22 @@ class AppTheme {
         ),
         labelStyle: TextStyle(color: colorScheme.onSurface),
         secondaryLabelStyle: TextStyle(color: colorScheme.onPrimary),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: colorScheme.surface,
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: colorScheme.onSurfaceVariant,
         type: BottomNavigationBarType.fixed,
-        selectedIconTheme: const IconThemeData(size: 26),
+        selectedIconTheme: const IconThemeData(size: 28),
         unselectedIconTheme: const IconThemeData(size: 24),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           textStyle: WidgetStatePropertyAll(
             baseTextTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
@@ -250,7 +255,7 @@ class AppTheme {
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
           side: WidgetStatePropertyAll(
             BorderSide(color: colorScheme.outlineVariant),
@@ -261,7 +266,7 @@ class AppTheme {
         style: ButtonStyle(
           minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
       ),
@@ -273,7 +278,7 @@ class AppTheme {
         ),
       ),
       listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         selectedColor: colorScheme.primary,
         iconColor: colorScheme.onSurfaceVariant,
       ),

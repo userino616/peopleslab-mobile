@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // Brand primary (blue) inspired by modern delivery apps, but blue.
-  static const Color primary = Color(0xFF2563EB); // Blue 600
-  static const Color primaryDark = Color(0xFF1D4ED8); // Blue 700
+  // Brand primary green inspired by friendly, fresh vibes.
+  static const Color primary = Color(0xFF00A86B); // Emerald 600
+  static const Color primaryDark = Color(0xFF00714D); // Darker emerald
 
   // Supporting colors (kept minimal; rely on ColorScheme for variants).
   static const Color success = Color(0xFF16A34A); // Green 600
