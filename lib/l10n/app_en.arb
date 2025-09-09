@@ -56,6 +56,12 @@
   "validation_password_required": "Enter password",
   "validation_password_min": "Minimum 6 characters",
   "validation_code_required": "Code is required",
-  "validation_passwords_not_match": "Passwords do not match"
+  "validation_passwords_not_match": "Passwords do not match",
+  "searchProjectsHint": "Search research projects",
+  "supportProject": "Support project",
+  "categoryImmunity": "Immunity",
+  "categoryEnergy": "Energy",
+  "categorySleep": "Sleep",
+  "categoryGutHealth": "Gut health"
 }
 
