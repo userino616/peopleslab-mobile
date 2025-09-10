@@ -7,6 +7,8 @@ import 'package:peopleslab/app/main_shell.dart';
 import 'package:peopleslab/features/styleguide/presentation/atoms_demo_page.dart';
 import 'package:peopleslab/features/donation/presentation/donation_amount_page.dart';
 import 'package:peopleslab/features/donation/presentation/donation_args.dart';
+import 'package:peopleslab/features/donation/presentation/donation_success_page.dart';
+import 'package:peopleslab/features/donation/presentation/donation_success_args.dart';
 // import 'package:peopleslab/features/donation/presentation/digital_receipt_page.dart';
 import 'package:peopleslab/features/wallet/presentation/wallet_page.dart';
 import 'package:peopleslab/features/study/presentation/study_args.dart';
@@ -33,6 +35,7 @@ class AppRoutes {
   static const String home = '/home';
   static const String styleguideAtoms = '/__styleguide_atoms';
   static const String donate = '/donate';
+  static const String donationSuccess = '/donate/success';
   // static const String receipt = '/receipt'; // no receipts flow for now
   static const String wallet = '/wallet';
   static const String study = '/study';
@@ -54,6 +57,7 @@ const Set<String> publicRoutes = {
   AppRoutes.emailSignUp,
   AppRoutes.styleguideAtoms,
   AppRoutes.donate,
+  AppRoutes.donationSuccess,
   AppRoutes.wallet,
   AppRoutes.study,
 };
@@ -188,6 +192,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ? state.extra as DonationArgs
               : const DonationArgs(projectTitle: 'Дослідження');
           return DonationAmountPage(args: args);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.donationSuccess,
+        builder: (context, state) {
+          final args = state.extra as DonationSuccessArgs?;
+          if (args == null) {
+            return const Scaffold(body: Center(child: Text('Missing data')));
+          }
+          return DonationSuccessPage(args: args);
         },
       ),
       // Receipts flow disabled
