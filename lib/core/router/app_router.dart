@@ -1,9 +1,18 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:peopleslab/core/router/nav.dart';
 import 'package:peopleslab/app/main_shell.dart';
+import 'package:peopleslab/features/styleguide/presentation/atoms_demo_page.dart';
+import 'package:peopleslab/features/donation/presentation/donation_amount_page.dart';
+import 'package:peopleslab/features/donation/presentation/donation_args.dart';
+import 'package:peopleslab/features/donation/presentation/donation_success_page.dart';
+import 'package:peopleslab/features/donation/presentation/donation_success_args.dart';
+// import 'package:peopleslab/features/donation/presentation/digital_receipt_page.dart';
+import 'package:peopleslab/features/wallet/presentation/wallet_page.dart';
+import 'package:peopleslab/features/study/presentation/study_args.dart';
+import 'package:peopleslab/features/study/presentation/study_page.dart';
 import 'package:peopleslab/features/onboarding/presentation/onboarding_page.dart';
 import 'package:peopleslab/features/onboarding/presentation/welcome_page.dart';
 import 'package:peopleslab/core/di/providers.dart';
@@ -24,6 +33,12 @@ class AppRoutes {
   static const String signUp = '/signup';
   static const String forgotPassword = '/forgot-password';
   static const String home = '/home';
+  static const String styleguideAtoms = '/__styleguide_atoms';
+  static const String donate = '/donate';
+  static const String donationSuccess = '/donate/success';
+  // static const String receipt = '/receipt'; // no receipts flow for now
+  static const String wallet = '/wallet';
+  static const String study = '/study';
 
   // Optional nested flows kept for existing UI
   static const String emailSignIn = '/signin/email';
@@ -33,6 +48,22 @@ class AppRoutes {
 // Public routes (no auth required)
 const Set<String> publicRoutes = {
   AppRoutes.bootstrap,
+  AppRoutes.welcome,
+  AppRoutes.onboarding,
+  AppRoutes.signIn,
+  AppRoutes.signUp,
+  AppRoutes.forgotPassword,
+  AppRoutes.emailSignIn,
+  AppRoutes.emailSignUp,
+  AppRoutes.styleguideAtoms,
+  AppRoutes.donate,
+  AppRoutes.donationSuccess,
+  AppRoutes.wallet,
+  AppRoutes.study,
+};
+
+// Entry routes that should redirect to home when already authenticated
+const Set<String> authEntryRoutes = {
   AppRoutes.welcome,
   AppRoutes.onboarding,
   AppRoutes.signIn,
@@ -87,7 +118,7 @@ class RouterNotifier extends ChangeNotifier {
       appLogger.i('Router: unauthenticated -> welcome');
       return AppRoutes.welcome;
     }
-    if (phase == AuthPhase.authenticated && publicRoutes.contains(loc)) {
+    if (phase == AuthPhase.authenticated && authEntryRoutes.contains(loc)) {
       appLogger.i('Router: authenticated -> home');
       return AppRoutes.home;
     }
@@ -110,36 +141,92 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.welcome,
-        builder: (context, state) => const WelcomePage(),
+        pageBuilder: (context, state) => _authPage(const WelcomePage()),
       ),
       GoRoute(
         path: AppRoutes.onboarding,
-        builder: (context, state) => const OnboardingPage(),
+        pageBuilder: (context, state) => _authPage(const OnboardingPage()),
       ),
       GoRoute(
         path: AppRoutes.signIn,
-        builder: (context, state) => const SignInPage(),
+        pageBuilder: (context, state) => _authPage(const SignInPage()),
       ),
       GoRoute(
         path: AppRoutes.signUp,
-        builder: (context, state) => const SignUpPage(),
+        pageBuilder: (context, state) => _authPage(const SignUpPage()),
       ),
       GoRoute(
         path: AppRoutes.emailSignIn,
-        builder: (context, state) => const EmailSignIn(),
+        pageBuilder: (context, state) => _authPage(const EmailSignIn()),
       ),
       GoRoute(
         path: AppRoutes.emailSignUp,
-        builder: (context, state) => const EmailSignUpPage(),
+        pageBuilder: (context, state) => _authPage(const EmailSignUpPage()),
       ),
       GoRoute(
         path: AppRoutes.forgotPassword,
-        builder: (context, state) => const ForgotPasswordPage(),
+        pageBuilder: (context, state) => _authPage(const ForgotPasswordPage()),
       ),
       GoRoute(
         path: AppRoutes.home,
         builder: (context, state) => const MainShell(),
       ),
+      GoRoute(
+        path: AppRoutes.styleguideAtoms,
+        builder: (context, state) => const AtomsDemoPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.study,
+        builder: (context, state) {
+          final args = state.extra as StudyArgs?;
+          if (args == null) {
+            return const Scaffold(body: Center(child: Text('Study args missing')));
+          }
+          return StudyPage(args: args);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.donate,
+        builder: (context, state) {
+          final args = (state.extra is DonationArgs)
+              ? state.extra as DonationArgs
+              : const DonationArgs(projectTitle: 'Дослідження');
+          return DonationAmountPage(args: args);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.donationSuccess,
+        builder: (context, state) {
+          final args = state.extra as DonationSuccessArgs?;
+          if (args == null) {
+            return const Scaffold(body: Center(child: Text('Missing data')));
+          }
+          return DonationSuccessPage(args: args);
+        },
+      ),
+      // Receipts flow disabled
+      GoRoute(
+        path: AppRoutes.wallet,
+        builder: (context, state) => const WalletPage(),
+      ),
     ],
   );
 });
+
+CustomTransitionPage<T> _authPage<T>(Widget child) => CustomTransitionPage<T>(
+      transitionDuration: const Duration(milliseconds: 240),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeInOutCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.98, end: 1.0).animate(curved),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );

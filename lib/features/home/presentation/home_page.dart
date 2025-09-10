@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:peopleslab/common/widgets/search_field.dart';
 import 'package:peopleslab/app/bottom_nav.dart';
+import 'package:peopleslab/common/widgets/search_field.dart';
+import 'package:peopleslab/common/widgets/project_preview_card.dart';
+import 'package:peopleslab/common/widgets/app_filter_chip.dart';
+import 'package:peopleslab/common/widgets/risk_tag.dart';
+import 'package:go_router/go_router.dart';
+import 'package:peopleslab/core/router/app_router.dart';
+import 'package:peopleslab/features/donation/presentation/donation_args.dart';
+import 'package:peopleslab/features/study/presentation/study_args.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -10,29 +17,22 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final categories = const [
-      'Burgers',
-      'Pizza',
-      'Sushi',
-      'Desserts',
-      'Coffee',
-      'Healthy',
-    ];
+    final categories = const ['Трендові', 'Низький ризик', 'RCT', 'Нові'];
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
+            // Removed large header; keep clean content block
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AppSearchField(
-                      hintText: 'Search restaurants or dishes',
+                      hintText: 'Пошук досліджень або БАДів',
                       onChanged: (_) {},
                       onTap: () {
-                        // Open Search tab when tapping the search field
                         ref.read(bottomNavIndexProvider.notifier).state = 1;
                       },
                       readOnly: true,
@@ -45,9 +45,10 @@ class HomePage extends ConsumerWidget {
                           for (final c in categories)
                             Padding(
                               padding: const EdgeInsets.only(right: 8),
-                              child: FilterChip(
-                                label: Text(c),
-                                onSelected: (_) {},
+                              child: AppFilterChip(
+                                label: c,
+                                selected: c == 'Трендові',
+                                onPressed: () {},
                               ),
                             ),
                         ],
@@ -59,89 +60,47 @@ class HomePage extends ConsumerWidget {
               ),
             ),
             SliverList.builder(
-              itemCount: 6,
+              itemCount: 4,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
+                    horizontal: 16,
                     vertical: 8,
                   ),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 84,
-                              height: 84,
-                              color: colorScheme.primary.withValues(
-                                alpha: 0.08,
-                              ),
-                              child: Icon(
-                                Icons.restaurant_menu_rounded,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Blue Bite • ${categories[index % categories.length]}',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star_rounded,
-                                      size: 18,
-                                      color: Colors.amber[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text('4.${(index + 3) % 10} • 25-35 min'),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primary.withValues(
-                                          alpha: 0.08,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        'Free delivery',
-                                        style: theme.textTheme.labelMedium
-                                            ?.copyWith(
-                                              color: colorScheme.primary,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Popular: Chicken bowl, Pepperoni pizza',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                  child: ProjectPreviewCard(
+                    data: ProjectCardData(
+                      title: index.isEven
+                          ? 'Омега‑3 (EPA/DHA)'
+                          : 'Магній (гліцинат)',
+                      subtitle: 'Коротка ціль дослідження та дизайн',
+                      collected: 30000 + index * 5000,
+                      target: 80000,
+                      status: '🧪 Набір',
+                      design: index.isEven ? 'RCT' : 'Observational',
+                      term: '${2 + index} міс',
+                      risk: index % 3 == 0
+                          ? RiskLevel.low
+                          : index % 3 == 1
+                              ? RiskLevel.mid
+                              : RiskLevel.high,
+                      ethicalBoard: index.isEven,
                     ),
+                    onTap: () {
+                      context.push(
+                        AppRoutes.study,
+                        extra: StudyArgs(
+                          id: 'h$index',
+                          title: index.isEven
+                              ? 'Омега‑3 (EPA/DHA)'
+                              : 'Магній (гліцинат)',
+                          goal: 'Коротка ціль дослідження та дизайн',
+                          collected: 30000 + index * 5000,
+                          target: 80000,
+                          ethicalBoard: index.isEven,
+                          endsAt: DateTime.now().add(Duration(days: 20 - index * 2)),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
