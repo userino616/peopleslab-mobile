@@ -7,6 +7,7 @@ import 'package:peopleslab/common/widgets/app_text_field.dart';
 import 'package:peopleslab/common/widgets/soft_card.dart';
 import 'package:peopleslab/core/theme/design_tokens.dart';
 import 'package:peopleslab/features/donation/presentation/donation_args.dart';
+import 'package:peopleslab/features/donation/presentation/donation_success_args.dart';
 import 'package:peopleslab/core/router/app_router.dart';
 import 'package:peopleslab/app/bottom_nav.dart';
 
@@ -184,11 +185,14 @@ class _DonationAmountPageState extends ConsumerState<DonationAmountPage> {
   }
 
   void _proceed(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Дякуємо за підтримку!')),
+    context.go(
+      AppRoutes.donationSuccess,
+      extra: DonationSuccessArgs(
+        amount: amount,
+        returnToTabIndex: widget.args.returnToTabIndex,
+        projectTitle: widget.args.projectTitle,
+      ),
     );
-    _restoreTabIfNeeded();
-    Navigator.of(context).maybePop();
   }
 
   void _restoreTabIfNeeded() {
